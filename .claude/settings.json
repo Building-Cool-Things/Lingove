@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('version','unknown'\\)\\)\")",
+      "Bash(Test-Path \"d:\\\\2024\\\\english-practice\\\\app\\\\dashboard\\\\writing\\\\practice\\\\layout.tsx\")",
+      "Bash(mkdir -p \"d:/2024/english-practice/app/\\(practice\\)/dashboard/writing/analysis/[id]\")"
+    ],
+    "additionalDirectories": [
+      "d:\\2024\\english-practice\\app\\(practice)\\dashboard\\writing\\analysis"
+    ]
+  }
+}

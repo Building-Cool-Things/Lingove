@@ -1,0 +1,50 @@
+
+> english-practice@0.1.0 dev D:\2024\english-practice
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.2:3000
+- Environments: .env.local
+✓ Ready in 42s
+Creating turbopack project { dir: 'D:\\2024\\english-practice', testMode: true }
+
+ GET / 200 in 2.0s (next.js: 1714ms, application-code: 315ms)
+ GET /api/auth/get-session 200 in 29.3s (next.js: 29.2s, application-code: 193ms)
+ GET /service-worker.js 404 in 253ms (next.js: 158ms, application-code: 95ms)
+ GET / 200 in 214ms (next.js: 87ms, application-code: 128ms)
+ GET /api/auth/get-session 200 in 637ms (next.js: 142ms, application-code: 495ms)
+ POST / 500 in 2.5s (next.js: 22ms, application-code: 2.5s)
+  └─ ƒ getOnboardingState() in 329ms app/actions/onboarding.ts
+ GET /service-worker.js 404 in 742ms (next.js: 113ms, application-code: 629ms)
+ POST / 500 in 2.4s (next.js: 142ms, application-code: 2.3s)
+  └─ ƒ getOnboardingState() in 446ms app/actions/onboarding.ts
+ POST /api/auth/sign-out 200 in 230ms (next.js: 55ms, application-code: 175ms)
+ GET /api/auth/get-session 200 in 39ms (next.js: 11ms, application-code: 28ms)
+ POST /api/auth/sign-in/social 200 in 257ms (next.js: 25ms, application-code: 233ms)
+ GET /api/auth/callback/google?state=a0te4Tg6cytwfNIrI8HApGBZduUxgbns&iss=https%3A%2F%2Faccounts.google.com&code=4%2F0AdkVLPwuICsc1uV-Xxx9jHF0GX4-84X-BTnZkYPvisP7Qc_xJsJ683gZyyCdAOUyNcC0Gg&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=0&prompt=none 302 in 1277ms (next.js: 31ms, application-code: 1246ms)
+ GET / 200 in 333ms (next.js: 29ms, application-code: 304ms)
+ GET /api/auth/get-session 200 in 323ms (next.js: 39ms, application-code: 284ms)
+ GET /api/auth/get-session 200 in 194ms (next.js: 8ms, application-code: 186ms)
+ POST / 500 in 2.4s (next.js: 163ms, application-code: 2.2s)
+  └─ ƒ getOnboardingState() in 201ms app/actions/onboarding.ts
+ GET /service-worker.js 404 in 196ms (next.js: 72ms, application-code: 124ms)
+ POST / 500 in 1207ms (next.js: 45ms, application-code: 1162ms)
+  └─ ƒ getOnboardingState() in 317ms app/actions/onboarding.ts
+ GET / 200 in 119ms (next.js: 9ms, application-code: 110ms)
+ GET /api/auth/get-session 200 in 149ms (next.js: 23ms, application-code: 126ms)
+ POST / 500 in 861ms (next.js: 7ms, application-code: 854ms)
+  └─ ƒ getOnboardingState() in 158ms app/actions/onboarding.ts
+ POST / 500 in 808ms (next.js: 5ms, application-code: 803ms)
+  └─ ƒ getOnboardingState() in 202ms app/actions/onboarding.ts
+ GET /service-worker.js 404 in 130ms (next.js: 14ms, application-code: 116ms)
+ GET /api/auth/get-session 200 in 165ms (next.js: 28ms, application-code: 136ms)
+ GET / 200 in 693ms (next.js: 232ms, application-code: 461ms)
+ GET /api/auth/get-session 200 in 428ms (next.js: 87ms, application-code: 342ms)
+ GET /service-worker.js 404 in 741ms (next.js: 334ms, application-code: 407ms)
+ POST /api/auth/sign-in/social 200 in 141ms (next.js: 9ms, application-code: 132ms)
+ GET /api/auth/callback/google?state=Uxlq2ECjt5vCi0ITdkdrzxzOMArUhONB&iss=https%3A%2F%2Faccounts.google.com&code=4%2F0AdkVLPwD175aZ9u1jgQ3_meI_IbAZUYj4ai8FhMcMysVjCcH5HJ6E_TWbece4OyOA239aQ&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&authuser=0&prompt=none 302 in 1209ms (next.js: 9ms, application-code: 1200ms)
+ GET /api/auth/error?error=unable_to_create_user 200 in 16ms (next.js: 5ms, application-code: 11ms)
+ GET /service-worker.js 404 in 297ms (next.js: 124ms, application-code: 173ms)
+[?25h
+ ELIFECYCLE  Command failed with exit code 1.

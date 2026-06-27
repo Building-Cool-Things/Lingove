@@ -1,0 +1,259 @@
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" className="poppins_88...">
+                          <body
+                            className="min-h-full flex flex-col"
+-                           data-new-gr-c-s-check-loaded="14.1305.0"
+-                           data-gr-ext-installed=""
+                          >
+                  ...
+ 
+2026-06-25T13:38:05.611Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-06-25T13:38:09.043Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-06-25T14:06:39.597Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+(node:23824) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+(Use `node --trace-warnings ...` to show where the warning was created)
+⨯ MongoServerError: Updating the path 'email' would create a conflict at 'email'
+    at async getOnboardingState (app\actions\onboarding.ts:34:19)
+  32 |   }
+  33 |
+> 34 |   const profile = await ensureUserProfile({
+     |                   ^
+  35 |     id: user.id,
+  36 |     email: user.email,
+  37 |     name: user.name, {
+  errorLabelSet: Set(0) {},
+  errorResponse: {
+    ok: 0,
+    errmsg: "Updating the path 'email' would create a conflict at 'email'",
+    code: 40,
+    codeName: 'ConflictingUpdateOperators',
+    '$clusterTime': {
+      clusterTime: new Timestamp({ t: 1782396400, i: 21 }),
+      signature: [Object]
+    },
+    operationTime: new Timestamp({ t: 1782396400, i: 21 })
+  },
+  ok: 0,
+  code: 40,
+  codeName: 'ConflictingUpdateOperators',
+  '$clusterTime': {
+    clusterTime: new Timestamp({ t: 1782396400, i: 21 }),
+    signature: {
+      hash: Binary.createFromBase64('twSW8ALX7OpiuBTC/wOq4s4Nezk=', 0),
+      keyId: new Long('7600463294817632259')
+    }
+  },
+  operationTime: new Timestamp({ t: 1782396400, i: 21 }),
+  digest: '728837838'
+}
+(node:23824) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+⨯ MongoServerError: Updating the path 'email' would create a conflict at 'email'
+    at async getOnboardingState (app\actions\onboarding.ts:34:19)
+  32 |   }
+  33 |
+> 34 |   const profile = await ensureUserProfile({
+     |                   ^
+  35 |     id: user.id,
+  36 |     email: user.email,
+  37 |     name: user.name, {
+  errorLabelSet: Set(0) {},
+  errorResponse: {
+    ok: 0,
+    errmsg: "Updating the path 'email' would create a conflict at 'email'",
+    code: 40,
+    codeName: 'ConflictingUpdateOperators',
+    '$clusterTime': {
+      clusterTime: new Timestamp({ t: 1782396402, i: 4 }),
+      signature: [Object]
+    },
+    operationTime: new Timestamp({ t: 1782396402, i: 4 })
+  },
+  ok: 0,
+  code: 40,
+  codeName: 'ConflictingUpdateOperators',
+  '$clusterTime': {
+    clusterTime: new Timestamp({ t: 1782396402, i: 4 }),
+    signature: {
+      hash: Binary.createFromBase64('8a7gyGavmhQsV3YW8Jd8kmK+zN4=', 0),
+      keyId: new Long('7600463294817632259')
+    }
+  },
+  operationTime: new Timestamp({ t: 1782396402, i: 4 }),
+  digest: '728837838'
+}
+2026-06-25T14:06:44.818Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+(node:23824) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+⨯ MongoServerError: Updating the path 'email' would create a conflict at 'email'
+    at async getOnboardingState (app\actions\onboarding.ts:34:19)
+  32 |   }
+  33 |
+> 34 |   const profile = await ensureUserProfile({
+     |                   ^
+  35 |     id: user.id,
+  36 |     email: user.email,
+  37 |     name: user.name, {
+  errorLabelSet: Set(0) {},
+  errorResponse: {
+    ok: 0,
+    errmsg: "Updating the path 'email' would create a conflict at 'email'",
+    code: 40,
+    codeName: 'ConflictingUpdateOperators',
+    '$clusterTime': {
+      clusterTime: new Timestamp({ t: 1782396492, i: 6 }),
+      signature: [Object]
+    },
+    operationTime: new Timestamp({ t: 1782396492, i: 6 })
+  },
+  ok: 0,
+  code: 40,
+  codeName: 'ConflictingUpdateOperators',
+  '$clusterTime': {
+    clusterTime: new Timestamp({ t: 1782396492, i: 6 }),
+    signature: {
+      hash: Binary.createFromBase64('0U5tGg1YbrQGjJUPES5YVycyle4=', 0),
+      keyId: new Long('7600463294817632259')
+    }
+  },
+  operationTime: new Timestamp({ t: 1782396492, i: 6 }),
+  digest: '728837838'
+}
+2026-06-25T14:08:14.375Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+(node:23824) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+⨯ MongoServerError: Updating the path 'email' would create a conflict at 'email'
+    at async getOnboardingState (app\actions\onboarding.ts:34:19)
+  32 |   }
+  33 |
+> 34 |   const profile = await ensureUserProfile({
+     |                   ^
+  35 |     id: user.id,
+  36 |     email: user.email,
+  37 |     name: user.name, {
+  errorLabelSet: Set(0) {},
+  errorResponse: {
+    ok: 0,
+    errmsg: "Updating the path 'email' would create a conflict at 'email'",
+    code: 40,
+    codeName: 'ConflictingUpdateOperators',
+    '$clusterTime': {
+      clusterTime: new Timestamp({ t: 1782396495, i: 2 }),
+      signature: [Object]
+    },
+    operationTime: new Timestamp({ t: 1782396495, i: 2 })
+  },
+  ok: 0,
+  code: 40,
+  codeName: 'ConflictingUpdateOperators',
+  '$clusterTime': {
+    clusterTime: new Timestamp({ t: 1782396495, i: 2 }),
+    signature: {
+      hash: Binary.createFromBase64('nfwPppk5MIasZqQ/vesjddZwY1c=', 0),
+      keyId: new Long('7600463294817632259')
+    }
+  },
+  operationTime: new Timestamp({ t: 1782396495, i: 2 }),
+  digest: '728837838'
+}
+(node:23824) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+⨯ MongoServerError: Updating the path 'email' would create a conflict at 'email'
+    at async getOnboardingState (app\actions\onboarding.ts:34:19)
+  32 |   }
+  33 |
+> 34 |   const profile = await ensureUserProfile({
+     |                   ^
+  35 |     id: user.id,
+  36 |     email: user.email,
+  37 |     name: user.name, {
+  errorLabelSet: Set(0) {},
+  errorResponse: {
+    ok: 0,
+    errmsg: "Updating the path 'email' would create a conflict at 'email'",
+    code: 40,
+    codeName: 'ConflictingUpdateOperators',
+    '$clusterTime': {
+      clusterTime: new Timestamp({ t: 1782396510, i: 6 }),
+      signature: [Object]
+    },
+    operationTime: new Timestamp({ t: 1782396510, i: 6 })
+  },
+  ok: 0,
+  code: 40,
+  codeName: 'ConflictingUpdateOperators',
+  '$clusterTime': {
+    clusterTime: new Timestamp({ t: 1782396510, i: 6 }),
+    signature: {
+      hash: Binary.createFromBase64('YS3SdThIEzwPA6fVHJJyeTW7eE8=', 0),
+      keyId: new Long('7600463294817632259')
+    }
+  },
+  operationTime: new Timestamp({ t: 1782396510, i: 6 }),
+  digest: '728837838'
+}
+(node:23824) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+⨯ MongoServerError: Updating the path 'email' would create a conflict at 'email'
+    at async getOnboardingState (app\actions\onboarding.ts:34:19)
+  32 |   }
+  33 |
+> 34 |   const profile = await ensureUserProfile({
+     |                   ^
+  35 |     id: user.id,
+  36 |     email: user.email,
+  37 |     name: user.name, {
+  errorLabelSet: Set(0) {},
+  errorResponse: {
+    ok: 0,
+    errmsg: "Updating the path 'email' would create a conflict at 'email'",
+    code: 40,
+    codeName: 'ConflictingUpdateOperators',
+    '$clusterTime': {
+      clusterTime: new Timestamp({ t: 1782396511, i: 15 }),
+      signature: [Object]
+    },
+    operationTime: new Timestamp({ t: 1782396511, i: 15 })
+  },
+  ok: 0,
+  code: 40,
+  codeName: 'ConflictingUpdateOperators',
+  '$clusterTime': {
+    clusterTime: new Timestamp({ t: 1782396511, i: 15 }),
+    signature: {
+      hash: Binary.createFromBase64('RGU4C5Ch2VZtOjw1Gg9WsxJSQhg=', 0),
+      keyId: new Long('7600463294817632259')
+    }
+  },
+  operationTime: new Timestamp({ t: 1782396511, i: 15 }),
+  digest: '728837838'
+}
+2026-06-25T14:08:34.465Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-06-25T14:08:38.533Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+(node:23824) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+2026-06-25T15:49:00.225Z ERROR [Better Auth]: MongoServerError: Updating the path 'email' would create a conflict at 'email'
+2026-06-25T15:49:00.226Z ERROR [Better Auth]: unable_to_create_user
+2026-06-25T15:49:32.518Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
