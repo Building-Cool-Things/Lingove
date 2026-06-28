@@ -1,22 +1,34 @@
 "use client";
 
-import { type FormEvent, useEffect, useState, useTransition } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BookOpen,
   BriefcaseBusiness,
+  Building2,
+  Check,
   ClipboardCheck,
+  Code2,
+  FileCheck,
+  GraduationCap,
+  Heart,
+  Home,
+  Laptop,
   LayoutDashboard,
   LibraryBig,
   LogOut,
   MessageCircle,
+  Monitor,
   Moon,
   PenLine,
+  Search,
   Sparkles,
   Sun,
   Target,
+  User,
   Volume2,
+  Wrench,
 } from "lucide-react";
 
 import {
@@ -24,17 +36,8 @@ import {
   getOnboardingState,
 } from "@/app/actions/onboarding";
 import { BrandMark } from "@/components/brand-mark";
-import { Badge } from "@/components/ui/badge";
+import { type Theme, useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { signOut, useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +80,22 @@ const INTEREST_GROUPS = [
   },
 ];
 
+const OCCUPATION_ICONS: Record<string, React.ElementType> = {
+  "School Student":                   GraduationCap,
+  "College Student":                  GraduationCap,
+  "Working Professional":             BriefcaseBusiness,
+  "Software Developer":               Code2,
+  "Business Owner":                   Building2,
+  "Freelancer":                       Laptop,
+  "Teacher":                          BookOpen,
+  "Doctor":                           Heart,
+  "Engineer":                         Wrench,
+  "Preparing for Government Exams":   FileCheck,
+  "Looking for a Job":                Search,
+  "Homemaker":                        Home,
+  "Other":                            User,
+};
+
 const sidebarItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Reading", href: "/dashboard/reading", icon: BookOpen },
@@ -108,7 +127,7 @@ export default function DashboardLayout({
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [darkMode, setDarkMode] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -136,19 +155,12 @@ export default function DashboardLayout({
   const displayName = user.name ?? "LingoVe learner";
 
   return (
-    <div className={cn("h-screen overflow-hidden bg-background text-foreground", darkMode && "dark")}>
+    <div className="h-screen overflow-hidden bg-background text-foreground">
       <div className="flex h-full flex-col overflow-hidden lg:flex-row">
         <aside className="flex w-full shrink-0 flex-col border-b border-sidebar-border bg-sidebar text-sidebar-foreground lg:h-screen lg:w-72 lg:border-b-0 lg:border-r">
           <div className="flex items-center justify-between gap-3 px-5 py-5">
             <BrandMark />
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={darkMode ? "Use light dashboard" : "Use dark dashboard"}
-              onClick={() => setDarkMode((current) => !current)}
-            >
-              {darkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
+            <ThemeSwitcher current={theme} onChange={setTheme} />
           </div>
 
           <nav className="grid gap-1 px-3 pb-4">
@@ -207,16 +219,54 @@ export default function DashboardLayout({
   );
 }
 
+// ── ThemeSwitcher ─────────────────────────────────────────────────────────────
+
+const THEME_OPTIONS: { value: Theme; icon: React.ElementType; label: string }[] = [
+  { value: "light",  icon: Sun,     label: "Light"  },
+  { value: "system", icon: Monitor, label: "System" },
+  { value: "dark",   icon: Moon,    label: "Dark"   },
+];
+
+function ThemeSwitcher({
+  current,
+  onChange,
+}: {
+  current: Theme;
+  onChange: (t: Theme) => void;
+}) {
+  return (
+    <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
+      {THEME_OPTIONS.map(({ value, icon: Icon, label }) => (
+        <Button
+          key={value}
+          variant="ghost"
+          size="icon-sm"
+          aria-label={label}
+          title={label}
+          onClick={() => onChange(value)}
+          className={cn(
+            current === value
+              ? "bg-background text-foreground shadow-sm hover:bg-background"
+              : "text-muted-foreground"
+          )}
+        >
+          <Icon className="size-3.5" />
+        </Button>
+      ))}
+    </div>
+  );
+}
+
 function OnboardingModal() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]           = useState(false);
+  const [step, setStep]           = useState<1 | 2>(1);
   const [occupation, setOccupation] = useState("");
   const [interests, setInterests] = useState<Set<string>>(new Set());
-  const [error, setError] = useState("");
+  const [error, setError]         = useState("");
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     let isActive = true;
-
     getOnboardingState()
       .then((profile) => {
         if (!isActive) return;
@@ -227,144 +277,185 @@ function OnboardingModal() {
         setError("Could not load your profile. Please refresh and try again.");
         setOpen(true);
       });
-
-    return () => {
-      isActive = false;
-    };
+    return () => { isActive = false; };
   }, []);
 
   function toggleInterest(item: string) {
     setInterests((prev) => {
       const next = new Set(prev);
-      if (next.has(item)) next.delete(item);
-      else next.add(item);
+      if (next.has(item)) next.delete(item); else next.add(item);
       return next;
     });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handleContinue() {
+    if (!occupation) { setError("Please select what you do."); return; }
     setError("");
+    setStep(2);
+  }
 
-    if (!occupation) {
-      setError("Please select what you do.");
-      return;
-    }
-
-    if (interests.size === 0) {
-      setError("Please pick at least one interest.");
-      return;
-    }
-
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (interests.size === 0) { setError("Please pick at least one interest."); return; }
     startTransition(async () => {
       try {
-        const result = await completeOnboarding({
-          occupation,
-          interests: [...interests],
-        });
-
-        if (result.ok) {
-          setOpen(false);
-        } else {
-          setError(result.message);
-        }
+        const result = await completeOnboarding({ occupation, interests: [...interests] });
+        if (result.ok) setOpen(false);
+        else setError(result.message);
       } catch {
         setError("Could not save. Please try again.");
       }
     });
   }
 
-  if (!open) {
-    return null;
-  }
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-foreground/45 px-4 py-6 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-md">
       <div
         aria-modal="true"
         role="dialog"
-        className="flex w-full max-w-2xl flex-col rounded-xl border border-border bg-card text-card-foreground shadow-2xl max-h-[90vh]"
+        className="flex w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"
+        style={{ maxHeight: "90vh" }}
       >
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="shrink-0 border-b border-border p-5 sm:p-6">
-            <Badge variant="accent">First setup</Badge>
-            <h2 className="mt-4 text-2xl font-semibold tracking-normal">
-              Shape your English practice
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Help us personalize your lessons, prompts, and vocabulary.
-            </p>
+        {/* ── Top bar: step pills + label ── */}
+        <div className="flex shrink-0 items-center justify-between px-6 pt-5">
+          <div className="flex items-center gap-1.5">
+            {([1, 2] as const).map((s) => (
+              <div
+                key={s}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  s === step   ? "w-8 bg-primary"
+                  : s < step   ? "w-4 bg-primary/50"
+                  :              "w-4 bg-muted",
+                )}
+              />
+            ))}
           </div>
+          <span className="text-xs font-semibold text-muted-foreground">
+            {step === 1 ? "Step 1 of 2" : "Step 2 of 2"}
+          </span>
+        </div>
 
-          <div className="flex-1 space-y-6 overflow-y-auto p-5 sm:p-6">
-            <div className="space-y-2">
-              <Label className="gap-1.5 text-sm font-medium">
-                <BriefcaseBusiness className="size-4 text-primary" />
-                What do you do?
-              </Label>
-              <Select value={occupation} onValueChange={(val) => setOccupation(val ?? "")}>
-                <SelectTrigger className="h-10 w-full">
-                  <SelectValue placeholder="Select your occupation..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {OCCUPATIONS.map((opt) => (
-                    <SelectItem key={opt} value={opt}>
-                      {opt}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {/* ══ STEP 1 — occupation ══════════════════════════════════════════════ */}
+        {step === 1 && (
+          <>
+            <div className="shrink-0 px-6 pb-4 pt-4">
+              <h2 className="text-2xl font-bold tracking-tight">Who are you?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                We&apos;ll tailor your practice to match your background.
+              </p>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium">What topics interest you?</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Pick as many as you like — we&apos;ll use these to find relevant practice content.
-                </p>
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-2">
+              <div className="grid grid-cols-3 gap-2">
+                {OCCUPATIONS.map((occ) => {
+                  const Icon = OCCUPATION_ICONS[occ] ?? User;
+                  const active = occupation === occ;
+                  return (
+                    <Button
+                      key={occ}
+                      variant="ghost"
+                      onClick={() => { setOccupation(occ); setError(""); }}
+                      className={cn(
+                        "group h-auto w-full flex-col gap-2.5 rounded-xl border-2 px-2 py-4",
+                        active
+                          ? "border-primary bg-primary/5 text-primary hover:bg-primary/5"
+                          : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/40",
+                      )}
+                    >
+                      <div className={cn(
+                        "flex size-9 items-center justify-center rounded-full transition-colors",
+                        active ? "bg-primary/10" : "bg-muted group-hover/button:bg-primary/5",
+                      )}>
+                        <Icon className="size-4" />
+                      </div>
+                      <span className="text-[11px] font-semibold leading-4">{occ}</span>
+                    </Button>
+                  );
+                })}
               </div>
+            </div>
 
+            <div className="shrink-0 px-6 pb-5 pt-4">
+              {error && (
+                <p className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+              )}
+              <Button onClick={handleContinue} className="h-11 w-full text-sm font-semibold">
+                Continue
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* ══ STEP 2 — interests ═══════════════════════════════════════════════ */}
+        {step === 2 && (
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 px-6 pb-4 pt-4">
+              <h2 className="text-2xl font-bold tracking-tight">What excites you?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Pick topics you love — we&apos;ll build your practice around them.
+                {interests.size > 0 && (
+                  <span className="ml-1.5 font-bold text-primary">{interests.size} selected</span>
+                )}
+              </p>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-2 space-y-5">
               {INTEREST_GROUPS.map((group) => (
                 <div key={group.label}>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                     {group.label}
                   </p>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {group.items.map((item) => (
-                      <div key={item} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`interest-${item}`}
-                          checked={interests.has(item)}
-                          onCheckedChange={() => toggleInterest(item)}
-                        />
-                        <Label
-                          htmlFor={`interest-${item}`}
-                          className="cursor-pointer font-normal"
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map((item) => {
+                      const active = interests.has(item);
+                      return (
+                        <Button
+                          key={item}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleInterest(item)}
+                          className={cn(
+                            "h-auto rounded-full border px-3.5 py-1.5 font-medium",
+                            active
+                              ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm"
+                              : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-muted/50",
+                          )}
                         >
+                          {active && <Check className="size-3" />}
                           {item}
-                        </Label>
-                      </div>
-                    ))}
+                        </Button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
 
-          <div className="shrink-0 space-y-3 border-t border-border p-5 sm:p-6">
-            {error ? (
-              <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            ) : null}
-            <div className="flex justify-end">
-              <Button disabled={isPending} type="submit" className="h-10 px-4">
-                <Sparkles className="size-4" />
-                {isPending ? "Saving..." : "Save and start"}
-              </Button>
+            <div className="shrink-0 px-6 pb-5 pt-4 space-y-3">
+              {error && (
+                <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+              )}
+              <div className="flex gap-2.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 px-5"
+                  onClick={() => { setStep(1); setError(""); }}
+                >
+                  Back
+                </Button>
+                <Button type="submit" disabled={isPending} className="h-11 flex-1 font-semibold">
+                  <Sparkles className="size-4" />
+                  {isPending ? "Setting up…" : "Start learning"}
+                </Button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );

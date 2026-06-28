@@ -69,7 +69,9 @@ const VocabularySchema = new Schema<Vocabulary>({
   phrasalForms: { type: [String], default: [] },
   tags: { type: [String], default: [] },
 });
-export const VocabularyModel = mongoose.model<Vocabulary>(
-  "Vocabulary",
-  VocabularySchema,
-);
+
+
+
+export const VocabularyModel =
+  (mongoose.models.Vocabulary as mongoose.Model<Vocabulary>) ??
+  mongoose.model<Vocabulary>("Vocabulary", VocabularySchema);

@@ -27,13 +27,13 @@ function AnalysisSkeleton() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* left panel ghost */}
-        <div className="hidden w-[40%] shrink-0 border-r border-indigo-100 bg-indigo-50/60 px-7 py-8 dark:border-indigo-900/40 dark:bg-indigo-950/20 lg:block xl:px-10">
-          <div className="h-3 w-32 animate-pulse rounded bg-indigo-200 dark:bg-indigo-900/40" />
+        <div className="hidden w-[42%] shrink-0 border-r border-border bg-muted/20 px-7 py-8 lg:block xl:px-10">
+          <div className="h-3 w-32 animate-pulse rounded bg-muted" />
           <div className="mt-5 space-y-3">
             {[1, 0.9, 0.75, 1, 0.85, 0.6].map((w, i) => (
               <div
                 key={i}
-                className="h-4 animate-pulse rounded bg-indigo-100 dark:bg-indigo-900/30"
+                className="h-4 animate-pulse rounded bg-muted"
                 style={{ width: `${w * 100}%` }}
               />
             ))}
@@ -65,8 +65,8 @@ function AnalysisSkeleton() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="h-36 animate-pulse rounded-xl bg-emerald-50 dark:bg-emerald-950/20" />
-            <div className="h-36 animate-pulse rounded-xl bg-amber-50 dark:bg-amber-950/20" />
+            <div className="h-36 animate-pulse rounded-xl bg-emerald-50" />
+            <div className="h-36 animate-pulse rounded-xl bg-amber-50" />
           </div>
 
           <p className="text-center text-sm text-muted-foreground">

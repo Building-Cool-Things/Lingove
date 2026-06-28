@@ -3,7 +3,11 @@
     "allow": [
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('version','unknown'\\)\\)\")",
       "Bash(Test-Path \"d:\\\\2024\\\\english-practice\\\\app\\\\dashboard\\\\writing\\\\practice\\\\layout.tsx\")",
-      "Bash(mkdir -p \"d:/2024/english-practice/app/\\(practice\\)/dashboard/writing/analysis/[id]\")"
+      "Bash(mkdir -p \"d:/2024/english-practice/app/\\(practice\\)/dashboard/writing/analysis/[id]\")",
+      "Bash(node -e \"const baseui = require\\('@base-ui/react'\\); console.log\\(Object.keys\\(baseui\\)\\)\")",
+      "Bash(node -e \"const baseui = require\\('@base-ui/react'\\); console.log\\(Object.keys\\(baseui\\).join\\(', '\\)\\)\")",
+      "Bash(git -C \"d:\\\\2024\\\\english-practice\" status)",
+      "Bash(node -e \"const pkg = require\\('d:/2024/english-practice/node_modules/next/package.json'\\); console.log\\(pkg.version\\)\")"
     ],
     "additionalDirectories": [
       "d:\\2024\\english-practice\\app\\(practice)\\dashboard\\writing\\analysis"

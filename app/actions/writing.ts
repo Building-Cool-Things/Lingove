@@ -7,6 +7,91 @@ import { connectDB } from "@/lib/db";
 import { chat, MODELS } from "@/lib/openrouter";
 import { UserProfile, type UserProfileDocument } from "@/lib/user-profile";
 import { WritingModel, type Writing } from "@/models/writing";
+import { VocabularyModel } from "@/models/vocab";
+
+// ── Robust JSON parser for LLM output ────────────────────────────────────────
+// LLMs frequently return JSON with literal newlines or unescaped double-quotes
+// inside string values. We try several progressive repair strategies before
+// giving up, so a single malformed character doesn't crash the whole submission.
+function repairParseJson(raw: string): unknown {
+  // 1. Strip markdown fences and grab the outermost { … }
+  let s = raw
+    .replace(/^```(?:json)?[\r\n]*/im, "")
+    .replace(/[\r\n]*```\s*$/m, "")
+    .trim();
+
+  const a = s.indexOf("{");
+  const b = s.lastIndexOf("}");
+  if (a >= 0 && b > a) s = s.slice(a, b + 1);
+
+  // 2. Attempt direct parse
+  try { return JSON.parse(s); } catch { /* fall through */ }
+
+  // 3. Fix trailing commas  →  ,}  or  ,]
+  s = s.replace(/,(\s*[}\]])/g, "$1");
+  try { return JSON.parse(s); } catch { /* fall through */ }
+
+  // 4. Escape literal control characters inside JSON strings.
+  //    Walk character-by-character; inside a string, replace raw \n/\r/\t
+  //    and any bare " that is NOT the closing delimiter.
+  s = escapeBareCharsInStrings(s);
+  try { return JSON.parse(s); } catch (e) {
+    throw new Error(`JSON repair failed: ${(e as Error).message}\n\nRaw snippet: ${s.slice(0, 300)}`);
+  }
+}
+
+function escapeBareCharsInStrings(src: string): string {
+  let out = "";
+  let inStr = false;
+  let i = 0;
+
+  while (i < src.length) {
+    const ch = src[i];
+
+    if (!inStr) {
+      out += ch;
+      if (ch === '"') inStr = true;
+      i++;
+      continue;
+    }
+
+    // Inside a JSON string
+    if (ch === "\\") {
+      // Keep existing escape sequences as-is
+      out += ch + (src[i + 1] ?? "");
+      i += 2;
+      continue;
+    }
+
+    if (ch === '"') {
+      // Is this the legitimate closing quote?
+      // Look ahead past whitespace to see if the next meaningful char is
+      // one that legally follows a string value: : , } ]
+      let j = i + 1;
+      while (j < src.length && /\s/.test(src[j])) j++;
+      const next = src[j];
+      if (next === ":" || next === "," || next === "}" || next === "]") {
+        out += ch;
+        inStr = false;
+      } else {
+        // Bare quote inside the string — escape it
+        out += '\\"';
+      }
+      i++;
+      continue;
+    }
+
+    // Raw control characters — escape them
+    if (ch === "\n") { out += "\\n"; i++; continue; }
+    if (ch === "\r") { out += "\\r"; i++; continue; }
+    if (ch === "\t") { out += "\\t"; i++; continue; }
+
+    out += ch;
+    i++;
+  }
+
+  return out;
+}
 
 async function getCurrentUser() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -264,16 +349,40 @@ const saveDrafts = async (
   });
   return (submission._id as { toString(): string }).toString();
 };
+type AnalysisResult = {
+  sentenceAnalysis: {
+    index: number;
+    original: string;
+    hasError: boolean;
+    errorType: string | null;
+    errorExplanation: string | null;
+    correctedSentence: string | null;
+    improvementTip: string | null;
+  }[];
+  grammarSummary: {
+    totalSentences: number;
+    errorCount: number;
+    mostCommonError: string | null;
+  } | null;
+  vocabEvaluation: { word: string; usedCorrectly: boolean; suggestion: string | null }[];
+  strongWords: string[];
+  missedWords: string[];
+  idealAnswer: string | null;
+  generalFeedback: string | null;
+  improvementPlan: string[];
+  vocabulary: Record<string, unknown>[];
+};
+
 const getAnalysis = async (
   question: WritingQuestion,
   draft: string,
   wordCount: number,
-) => {
+): Promise<AnalysisResult | null> => {
   const reply = await chat(
     [
       {
         role: "system",
-        content: `You are a strict IELTS writing examiner and English language expert. Evaluate the learner's writing honestly and return ONLY valid JSON — no markdown, no explanation, no extra text. Your one more task is to build vocabulary for learner, provide list of strong words and missed words that can imporve users vocabulary.`,
+        content: `You are a strict IELTS writing examiner and English language expert. Evaluate the learner's writing honestly and return ONLY valid JSON — no markdown fences, no explanation, no extra text before or after the JSON object. IMPORTANT: every string value must be on one line — use \\n for line breaks, escape any double-quote characters inside string values as \\", and never include raw newlines or unescaped quotes inside a JSON string.`,
       },
       {
         role: "user",
@@ -345,13 +454,7 @@ Return ONLY this JSON:
     { model: MODELS.default, temperature: 0.8 },
   );
 
-  const cleaned = reply
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "")
-    .trim();
-
-  const parsed = JSON.parse(cleaned);
-  return parsed;
+  return repairParseJson(reply) as AnalysisResult;
 };
 
 const XP_BY_DIFFICULTY = { EASY: 40, MEDIUM: 80, HARD: 120 } as const;
@@ -384,9 +487,22 @@ export async function submitWriting(
       improvementPlan: analysis.improvementPlan,
       analysisStatus: "COMPLETED",
     });
+    if (analysis.vocabulary?.length) {
+      await VocabularyModel.bulkWrite(
+        analysis.vocabulary.map((v) => ({
+          updateOne: {
+            filter: { word: (v as { word: string }).word },
+            update: { $setOnInsert: v },
+            upsert: true,
+          },
+        })),
+        { ordered: false },
+      );
+    }
 
     // Derive a 1–10 score from grammar error rate
-    const { errorCount = 0, totalSentences = 1 } = analysis.grammarSummary ?? {};
+    const errorCount    = analysis.grammarSummary?.errorCount    ?? 0;
+    const totalSentences = analysis.grammarSummary?.totalSentences ?? 1;
     const score = Math.max(1, Math.min(10,
       Math.round((1 - errorCount / Math.max(1, totalSentences)) * 10),
     ));
