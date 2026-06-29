@@ -76,3 +76,11 @@ export async function completeOnboarding(data: {
 
   return { ok: true, message: "" };
 }
+
+
+export async function getUserProfile(userId:string){
+  const d = await UserProfile.find({
+    authUserId:userId
+  })
+  return d
+}

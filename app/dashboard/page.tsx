@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -8,10 +9,10 @@ import {
   MessageCircle,
   PenLine,
   Sparkles,
-  Target,
   Volume2,
 } from "lucide-react";
 
+import { getUserProfile } from "@/app/actions/onboarding";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,13 +23,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
+import type { UserProfileDocument } from "@/lib/user-profile";
 import { cn } from "@/lib/utils";
 
-const weeklyStats = [
-  { label: "Practice streak", value: "12", detail: "days" },
-  { label: "Words learned", value: "186", detail: "this month" },
-  { label: "Corrections", value: "42", detail: "reviewed" },
-];
 
 const lessons = [
   {
@@ -89,27 +86,51 @@ const practiceSkills = [
 export default function DashboardPage() {
   const { data: session } = useSession();
   const displayName = session?.user?.name ?? "LingoVe learner";
+  const [profile, setProfile] = useState<UserProfileDocument | null>(null);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      getUserProfile(session.user.id).then((d) => {
+        console.log('daaa',d)
+        setProfile(d[0] ?? null)
+      });
+    }
+  }, [session?.user?.id]);
+
+  const stats = [
+    {
+      label: "Practice streak",
+      value: String(profile?.currentStreak ?? "—"),
+      detail: "days",
+    },
+    {
+      label: "Words learned",
+      value: String(profile?.totalVocabLearned ?? "—"),
+      detail: "total",
+    },
+    {
+      label: "Total XP",
+      value: String(profile?.totalXP ?? "—"),
+      detail: `level ${profile?.level ?? "—"}`,
+    },
+  ];
 
   return (
     <section className="px-5 py-6 sm:px-8 lg:px-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <Badge variant="secondary">Today&apos;s learning desk</Badge>
-          <h1 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">
+          <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">
             Keep your English moving, {displayName.split(" ")[0]}.
           </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            Continue your lesson, review new words, and check corrections from recent practice.
-          </p>
         </div>
         <Button>
-          <Sparkles className="size-4" />
+          <Sparkles />
           Start practice
         </Button>
       </div>
 
       <div className="mt-7 grid gap-4 md:grid-cols-3">
-        {weeklyStats.map((stat) => (
+        {stats.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">{stat.label}</p>
@@ -122,46 +143,15 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.5fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Learning path</CardTitle>
-            <CardDescription>
-              Your next exercises are ordered by impact and review timing.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {lessons.map((lesson) => (
-              <div
-                key={lesson.title}
-                className="flex flex-col gap-3 rounded-lg border border-border bg-background/55 p-4 sm:flex-row sm:items-center"
-              >
-                <div className={cn("flex size-11 items-center justify-center rounded-lg", lesson.tone)}>
-                  <GraduationCap className="size-5" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold">{lesson.title}</p>
-                    <Badge variant="outline">{lesson.meta}</Badge>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{lesson.description}</p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Open
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
 
-        <div className="grid gap-5">
+        <div className="grid gap-5 mt-3">
           <Card>
             <CardHeader>
               <CardTitle>Practice skills</CardTitle>
               <CardDescription>Choose one area to focus on.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-2">
                 {practiceSkills.map((skill) => (
                   <Link
                     key={skill.title}
@@ -172,7 +162,7 @@ export default function DashboardPage() {
                       <div className={cn("flex size-10 items-center justify-center rounded-lg", skill.tone)}>
                         <skill.icon className="size-5" />
                       </div>
-                      <Badge variant="outline">{skill.detail}</Badge>
+                      {/* <Badge variant="outline">{skill.detail}</Badge> */}
                     </div>
                     <h3 className="mt-4 font-semibold">{skill.title}</h3>
                     <p className="mt-1 text-sm leading-5 text-muted-foreground">
@@ -188,7 +178,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+    
     </section>
   );
 }
