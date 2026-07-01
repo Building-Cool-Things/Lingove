@@ -20,6 +20,9 @@ dependencies:
   clsx:
     specifier: ^2.1.1
     version: 2.1.1
+  jsonrepair:
+    specifier: ^3.14.1
+    version: 3.14.1
   lucide-react:
     specifier: ^1.21.0
     version: 1.21.0(react@19.2.4)
@@ -31,7 +34,7 @@ dependencies:
     version: 16.2.9(@babel/core@7.29.7)(react-dom@19.2.4)(react@19.2.4)
   openai:
     specifier: ^6.45.0
-    version: 6.45.0(zod@4.4.3)
+    version: 6.45.0(zod@3.25.76)
   react:
     specifier: 19.2.4
     version: 19.2.4
@@ -424,7 +427,7 @@ packages:
       '@better-fetch/fetch': 1.3.1
       '@opentelemetry/semantic-conventions': 1.41.1
       '@standard-schema/spec': 1.1.0
-      better-call: 1.3.6(zod@4.4.3)
+      better-call: 1.3.6(zod@3.25.76)
       jose: 6.2.3
       kysely: 0.29.2
       nanostores: 1.3.0
@@ -2026,7 +2029,7 @@ packages:
       '@better-fetch/fetch': 1.3.1
       '@noble/ciphers': 2.2.0
       '@noble/hashes': 2.2.0
-      better-call: 1.3.6(zod@4.4.3)
+      better-call: 1.3.6(zod@3.25.76)
       defu: 6.1.7
       jose: 6.2.3
       kysely: 0.29.2
@@ -2040,7 +2043,7 @@ packages:
       - '@opentelemetry/api'
     dev: false
 
-  /better-call@1.3.6(zod@4.4.3):
+  /better-call@1.3.6(zod@3.25.76):
     resolution: {integrity: sha512-no1jI+h6Bkxs1NVBo4rONbVIzsPjZ8IUu7IHaJBiFwVX1XEQGN8KpHots5fSWmXe9nNyLuLIcgx6WEUcE6EDaA==}
     peerDependencies:
       zod: ^4.0.0
@@ -2052,7 +2055,7 @@ packages:
       '@better-fetch/fetch': 1.3.1
       rou3: 0.7.12
       set-cookie-parser: 3.1.1
-      zod: 4.4.3
+      zod: 3.25.76
     dev: false
 
   /body-parser@2.3.0:
@@ -3845,6 +3848,11 @@ packages:
       graceful-fs: 4.2.11
     dev: false
 
+  /jsonrepair@3.14.1:
+    resolution: {integrity: sha512-NpGgMhmzG/fajkBEFlS9jZvMSGDvc2xN/9wNCHZ+Nx32GZfLRELU6UE6dQkebvrQUct9S+7bvnpX29NB36Qbdw==}
+    hasBin: true
+    dev: false
+
   /jsx-ast-utils@3.3.5:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
@@ -4438,7 +4446,7 @@ packages:
       is-wsl: 2.2.0
     dev: false
 
-  /openai@6.45.0(zod@4.4.3):
+  /openai@6.45.0(zod@3.25.76):
     resolution: {integrity: sha512-5DQVNErssk0afNpTTHUm/qZPU4iKR9OYdNid8Ib4puq4gHNNvGWZht2zY4h9a8JMF949Ik6m8gQutllVPbjdnw==}
     peerDependencies:
       '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
@@ -4458,7 +4466,7 @@ packages:
       zod:
         optional: true
     dependencies:
-      zod: 4.4.3
+      zod: 3.25.76
     dev: false
 
   /optionator@0.9.4:
