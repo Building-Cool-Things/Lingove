@@ -119,8 +119,8 @@ function resolveTopic(recentTopics: string[], interests: string[]): string {
 
 const PASSAGE_CONFIG = {
   EASY:   { wordRange: "200–280", questionCount: 5,  questionTypes: "MCQ and TRUE_FALSE_NG only" },
-  MEDIUM: { wordRange: "280–400", questionCount: 7,  questionTypes: "mix of MCQ, TRUE_FALSE_NG, and 1 SHORT_ANSWER" },
-  HARD:   { wordRange: "400–550", questionCount: 9,  questionTypes: "mix of MCQ, TRUE_FALSE_NG, and SHORT_ANSWER" },
+  MEDIUM: { wordRange: "320–400", questionCount: 8,  questionTypes: "mix of MCQ, TRUE_FALSE_NG, and 1 SHORT_ANSWER" },
+  HARD:   { wordRange: "500–650", questionCount: 12,  questionTypes: "mix of MCQ, TRUE_FALSE_NG, and SHORT_ANSWER" },
 };
 
 const LEVEL_LABELS = { EASY: "A2-B1", MEDIUM: "B1-B2", HARD: "C1-C2" };
@@ -173,7 +173,14 @@ export async function generateReadingTask(): Promise<ReadingTask> {
     [
       {
         role: "system",
-        content: `You are an IELTS reading examiner creating authentic reading comprehension tasks. Return ONLY valid JSON — no markdown, no explanation, no text outside the JSON object. Every string value must be on one line (use \\n for line breaks inside strings). Escape any double-quotes inside string values as \\".`,
+        content: `You are an IELTS reading examiner creating authentic reading comprehension tasks. Return ONLY valid JSON — no markdown, no explanation, no text outside the JSON object. Every string value must be on one line (use \\n for line breaks inside strings). Escape any double-quotes inside string values as \\". 
+        The main motive of generating the passage and questions should be - 
+        Reading comprehension – understand the passage.
+Information retrieval – find relevant details quickly.
+Vocabulary in context – infer word meanings.
+Critical thinking – make inferences and identify the author's intent.
+Attention to detail – distinguish facts from assumptions.
+        `,
       },
       {
         role: "user",

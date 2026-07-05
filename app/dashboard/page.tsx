@@ -5,10 +5,12 @@ import Link from "next/link";
 import {
   BookOpen,
   ChevronRight,
+  Flame,
   GraduationCap,
   MessageCircle,
   PenLine,
   Sparkles,
+  Trophy,
   Volume2,
 } from "lucide-react";
 
@@ -65,22 +67,22 @@ const practiceSkills = [
     href: "/dashboard/writing",
     tone: "bg-[#f0dccf] text-[#4b352c] dark:bg-[#4a3934] dark:text-[#f1d3c2]",
   },
-  {
-    title: "Listening",
-    description: "Audio drills for natural rhythm.",
-    icon: Volume2,
-    detail: "8 clips",
-    href: "/dashboard/listening",
-    tone: "bg-[#dedcf0] text-[#34324f] dark:bg-[#38364f] dark:text-[#e5e2ff]",
-  },
-  {
-    title: "Speaking",
-    description: "Record answers and improve fluency.",
-    icon: MessageCircle,
-    detail: "5 min",
-    href: "/dashboard/speaking",
-    tone: "bg-[#e6d994] text-[#443b1d] dark:bg-[#4d4528] dark:text-[#f1e8b1]",
-  },
+  // {
+  //   title: "Listening",
+  //   description: "Audio drills for natural rhythm.",
+  //   icon: Volume2,
+  //   detail: "8 clips",
+  //   href: "/dashboard/listening",
+  //   tone: "bg-[#dedcf0] text-[#34324f] dark:bg-[#38364f] dark:text-[#e5e2ff]",
+  // },
+  // {
+  //   title: "Speaking",
+  //   description: "Record answers and improve fluency.",
+  //   icon: MessageCircle,
+  //   detail: "5 min",
+  //   href: "/dashboard/speaking",
+  //   tone: "bg-[#e6d994] text-[#443b1d] dark:bg-[#4d4528] dark:text-[#f1e8b1]",
+  // },
 ];
 
 export default function DashboardPage() {
@@ -91,7 +93,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (session?.user?.id) {
       getUserProfile(session.user.id).then((d) => {
-        console.log('daaa',d)
+        console.log('daaa', d)
         setProfile(d[0] ?? null)
       });
     }
@@ -103,11 +105,11 @@ export default function DashboardPage() {
       value: String(profile?.currentStreak ?? "—"),
       detail: "days",
     },
-    {
-      label: "Words learned",
-      value: String(profile?.totalVocabLearned ?? "—"),
-      detail: "total",
-    },
+    // {
+    //   label: "Words learned",
+    //   value: String(profile?.totalVocabLearned ?? "—"),
+    //   detail: "total",
+    // },
     {
       label: "Total XP",
       value: String(profile?.totalXP ?? "—"),
@@ -117,19 +119,25 @@ export default function DashboardPage() {
 
   return (
     <section className="px-5 py-6 sm:px-8 lg:px-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-10">
         <div>
           <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">
-            Keep your English moving, {displayName.split(" ")[0]}.
+            Keep your communication moving, {displayName.split(" ")[0]}.
           </h1>
         </div>
-        <Button>
-          <Sparkles />
-          Start practice
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="rounded-full p-2 shadow-sm flex gap-2">
+            <Flame className="size-5 fill-orange-500 stroke-orange-500" />
+            <span>{profile?.currentStreak ?? 0}</span>
+          </div>
+          <div className="rounded-full p-2 shadow-sm flex gap-2">
+            <Trophy className="size-5 fill-emerald-500 stroke-emerald-500" />
+            <span>{profile?.totalXP ?? 0}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-7 grid gap-4 md:grid-cols-3">
+      {/* <div className="mt-7 grid gap-4 md:grid-cols-3">
         {stats.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-5">
@@ -141,44 +149,44 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ))}
+      </div> */}
+
+
+      <div className="grid gap-5 mt-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Practice skills</CardTitle>
+            <CardDescription>Choose one area to focus on.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-2">
+              {practiceSkills.map((skill) => (
+                <Link
+                  key={skill.title}
+                  href={skill.href}
+                  className="group rounded-lg border border-border bg-background/55 p-4 transition-all hover:border-primary/40 hover:bg-background"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className={cn("flex size-10 items-center justify-center rounded-lg", skill.tone)}>
+                      <skill.icon className="size-5" />
+                    </div>
+                    {/* <Badge variant="outline">{skill.detail}</Badge> */}
+                  </div>
+                  <h3 className="mt-4 font-semibold">{skill.title}</h3>
+                  <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                    {skill.description}
+                  </p>
+                  <div className="mt-4 flex items-center text-sm font-medium text-primary">
+                    Open
+                    <ChevronRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-
-        <div className="grid gap-5 mt-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Practice skills</CardTitle>
-              <CardDescription>Choose one area to focus on.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-2">
-                {practiceSkills.map((skill) => (
-                  <Link
-                    key={skill.title}
-                    href={skill.href}
-                    className="group rounded-lg border border-border bg-background/55 p-4 transition-all hover:border-primary/40 hover:bg-background"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className={cn("flex size-10 items-center justify-center rounded-lg", skill.tone)}>
-                        <skill.icon className="size-5" />
-                      </div>
-                      {/* <Badge variant="outline">{skill.detail}</Badge> */}
-                    </div>
-                    <h3 className="mt-4 font-semibold">{skill.title}</h3>
-                    <p className="mt-1 text-sm leading-5 text-muted-foreground">
-                      {skill.description}
-                    </p>
-                    <div className="mt-4 flex items-center text-sm font-medium text-primary">
-                      Open
-                      <ChevronRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-    
     </section>
   );
 }

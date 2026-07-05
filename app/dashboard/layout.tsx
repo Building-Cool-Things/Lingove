@@ -21,6 +21,7 @@ import {
   MessageCircle,
   Monitor,
   Moon,
+  MoreVertical,
   PenLine,
   Search,
   Sparkles,
@@ -38,6 +39,14 @@ import {
 import { BrandMark } from "@/components/brand-mark";
 import { type Theme, useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { signOut, useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -81,30 +90,30 @@ const INTEREST_GROUPS = [
 ];
 
 const OCCUPATION_ICONS: Record<string, React.ElementType> = {
-  "School Student":                   GraduationCap,
-  "College Student":                  GraduationCap,
-  "Working Professional":             BriefcaseBusiness,
-  "Software Developer":               Code2,
-  "Business Owner":                   Building2,
-  "Freelancer":                       Laptop,
-  "Teacher":                          BookOpen,
-  "Doctor":                           Heart,
-  "Engineer":                         Wrench,
-  "Preparing for Government Exams":   FileCheck,
-  "Looking for a Job":                Search,
-  "Homemaker":                        Home,
-  "Other":                            User,
+  "School Student": GraduationCap,
+  "College Student": GraduationCap,
+  "Working Professional": BriefcaseBusiness,
+  "Software Developer": Code2,
+  "Business Owner": Building2,
+  "Freelancer": Laptop,
+  "Teacher": BookOpen,
+  "Doctor": Heart,
+  "Engineer": Wrench,
+  "Preparing for Government Exams": FileCheck,
+  "Looking for a Job": Search,
+  "Homemaker": Home,
+  "Other": User,
 };
 
 const sidebarItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Reading", href: "/dashboard/reading", icon: BookOpen },
   { label: "Writing", href: "/dashboard/writing", icon: PenLine },
-  { label: "Speaking", href: "/dashboard/speaking", icon: MessageCircle },
-  { label: "Listening", href: "/dashboard/listening", icon: Volume2 },
+  // { label: "Speaking", href: "/dashboard/speaking", icon: MessageCircle },
+  // { label: "Listening", href: "/dashboard/listening", icon: Volume2 },
   { label: "Vocabulary", href: "/dashboard/vocabulary", icon: LibraryBig },
-  { label: "Corrections", href: "/dashboard/corrections", icon: ClipboardCheck },
-  { label: "Progress", href: "/dashboard/progress", icon: Target },
+  // { label: "Corrections", href: "/dashboard/corrections", icon: ClipboardCheck },
+  // { label: "Progress", href: "/dashboard/progress", icon: Target },
 ];
 
 function getInitials(value?: string | null) {
@@ -170,42 +179,44 @@ export default function DashboardLayout({
                   ? pathname === "/dashboard"
                   : pathname.startsWith(item.href);
               return (
-                <Button
-                  key={item.label}
-                  variant={isActive ? "secondary" : "ghost"}
-                  className={cn(
-                    "h-10 justify-start px-3 text-sidebar-foreground",
-                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
-                  )}
-                  asChild
-                >
-                  <Link href={item.href} className="flex items-center gap-3">
+                <Link href={item.href} key={item.label} className={cn(
+                  "h-10 justify-start px-3 text-sidebar-foreground hover:bg-white/10 rounded-lg",
+                  isActive && "bg-sidebar-accent text-sidebar-accent-foreground flex "
+                )}>
+                  <div
+                    className="flex items-center gap-3 h-10"
+                  >
+
                     <item.icon className="size-4" />
                     {item.label}
-                  </Link>
-                </Button>
+
+                  </div>
+                </Link>
               );
             })}
           </nav>
 
           <div className="mt-auto border-t border-sidebar-border p-4">
-            <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent p-3 text-sidebar-accent-foreground">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
-                {initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{displayName}</p>
-                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              className="mt-3 w-full justify-start text-sidebar-foreground"
-              onClick={() => signOut()}
-            >
-              <LogOut className="size-4" />
-              Sign out
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg bg-sidebar-accent p-3 text-left text-sidebar-accent-foreground transition-colors hover:bg-sidebar-accent/80 focus-visible:outline-none">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
+                  {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{displayName}</p>
+                  <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                </div>
+                <MoreVertical className="size-4 shrink-0 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top" className="w-64">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" onClick={() => signOut()}>
+                  <LogOut className="size-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </aside>
 
@@ -222,9 +233,9 @@ export default function DashboardLayout({
 // ── ThemeSwitcher ─────────────────────────────────────────────────────────────
 
 const THEME_OPTIONS: { value: Theme; icon: React.ElementType; label: string }[] = [
-  { value: "light",  icon: Sun,     label: "Light"  },
+  { value: "light", icon: Sun, label: "Light" },
   { value: "system", icon: Monitor, label: "System" },
-  { value: "dark",   icon: Moon,    label: "Dark"   },
+  { value: "dark", icon: Moon, label: "Dark" },
 ];
 
 function ThemeSwitcher({
@@ -258,11 +269,11 @@ function ThemeSwitcher({
 }
 
 function OnboardingModal() {
-  const [open, setOpen]           = useState(false);
-  const [step, setStep]           = useState<1 | 2>(1);
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
   const [occupation, setOccupation] = useState("");
   const [interests, setInterests] = useState<Set<string>>(new Set());
-  const [error, setError]         = useState("");
+  const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -327,9 +338,9 @@ function OnboardingModal() {
                 key={s}
                 className={cn(
                   "h-1.5 rounded-full transition-all duration-300",
-                  s === step   ? "w-8 bg-primary"
-                  : s < step   ? "w-4 bg-primary/50"
-                  :              "w-4 bg-muted",
+                  s === step ? "w-8 bg-primary"
+                    : s < step ? "w-4 bg-primary/50"
+                      : "w-4 bg-muted",
                 )}
               />
             ))}

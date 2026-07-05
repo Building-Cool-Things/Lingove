@@ -211,7 +211,7 @@ export default function ReadingPracticePage() {
   useEffect(() => {
     let active = true;
     generateReadingTask()
-      .then((t) => { if (active) { setTask(t); setAnswers({}); } })
+      .then((t) => { if (active) { console.log('task',t); setTask(t); setAnswers({}); } })
       .catch(() => {})
       .finally(() => { if (active) setIsLoading(false); });
     return () => { active = false; };

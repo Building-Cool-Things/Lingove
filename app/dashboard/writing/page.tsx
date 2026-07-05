@@ -5,6 +5,8 @@ import { connectDB } from "@/lib/db";
 import { WritingModel } from "@/models/writing";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function WritingPage() {
   await connectDB();
@@ -36,20 +38,21 @@ export default async function WritingPage() {
         ) : (
           <ul className="mt-3 space-y-3">
             {submissions.map((s) => (
-              <li key={String(s._id)}>
-                <Link
-                  href={`/dashboard/writing/analysis/${String(s._id)}`}
-                  className="block rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                >
+              <Link
+                key={String(s._id)}
+                href={`/dashboard/writing/analysis/${String(s._id)}`}
+              >
+                <Card className="px-6 py-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">{s.title}</span>
-                    <span className="text-xs text-muted-foreground capitalize">
+                    <span className="text-lg">{s.title}</span>
+                    <Badge className="text-xs">
                       {s.type.toLowerCase()} · {s.difficulty.toLowerCase()}
-                    </span>
+                    </Badge>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{s.topic}</p>
-                </Link>
-              </li>
+
+                </Card>
+              </Link>
             ))}
           </ul>
         )}
