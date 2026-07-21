@@ -16,8 +16,8 @@ export const openrouter = new OpenRouter({
 // Change DEFAULT_MODEL here to switch the whole app at once.
 // Or pass `model` per-call to override for a single request.
 export const MODELS = {
-  default:   "google/gemini-2.5-flash",
-  fast:      "google/gemini-3.1-flash-lite",
+  default:   "google/gemini-2.5-flash-lite",
+  fast:      "google/gemini-3.1-flash",
   smart:     "google/gemini-3.1-pro-preview",
   gpt4o:     "openai/gpt-4o",
   gpt4oMini: "openai/gpt-4o-mini",

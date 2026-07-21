@@ -23,3 +23,9 @@ For free users
 one submission per day -  low model of gemini
 
 we have to come up with pricing model later because we have only Reading and writing feature, we need listening and speaking for better audience reach and apply pricing 
+
+
+
+# Corrections
+1. Grammer should be also generrated
+2. Ways to show vocab
