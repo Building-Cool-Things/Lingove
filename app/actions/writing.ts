@@ -193,7 +193,7 @@ export async function generateWritingQuestion(): Promise<WritingQuestion> {
     [
       {
         role: "system",
-        content: `You are a strict IELTS writing examiner and English language expert. Your job is to generate authentic IELTS-style writing tasks tailored to the learner's profile. Return ONLY valid JSON — no markdown, no explanation, no extra text outside the JSON object.`,
+        content: `You are a strict IELTS writing examiner and English language expert. Your job is to generate authentic IELTS-style writing tasks tailored to the learner's profile. The topic should be unique and relevant to the learner and thought provoking. Return ONLY valid JSON — no markdown, no explanation, no extra text outside the JSON object.`,
       },
       {
         role: "user",

@@ -29,3 +29,4 @@ we have to come up with pricing model later because we have only Reading and wri
 # Corrections
 1. Grammer should be also generrated
 2. Ways to show vocab
+3. Topic is repeating  -  store somewhere and think how to generate unique topics
