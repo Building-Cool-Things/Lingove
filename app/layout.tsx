@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Poppins, Inter, Geist } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
-const geistHeading = Geist({subsets:['latin'],variable:'--font-heading'});
-
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -14,8 +11,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LingoVe",
-  description: "Practice English with guided daily lessons",
+  title: "Lingov",
+  description: "Learn English by talking.",
 };
 
 export default function RootLayout({
@@ -23,18 +20,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The Lingov design is dark-only.
   return (
     <html
+      suppressHydrationWarning
       lang="en"
-      className={cn("h-full", "antialiased", geistMono.variable, "font-sans", inter.variable, geistHeading.variable)}
+      className={cn("dark h-full antialiased font-sans", geistMono.variable, geist.variable)}
     >
-      {/* Prevent flash of wrong theme before React hydrates */}
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('lv-theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');})();` }} />
-      </head>
-      <body className="min-h-full flex flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+      <body className="min-h-full flex flex-col bg-[#040608]">{children}</body>
     </html>
   );
 }

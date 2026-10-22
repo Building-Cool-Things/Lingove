@@ -1,5 +1,5 @@
 // types/global.d.ts
-
+import type mongoose from "mongoose";
 
 declare global {
   var mongoose: {
@@ -7,3 +7,5 @@ declare global {
     promise: Promise<typeof mongoose> | null;
   };
 }
+
+export {};

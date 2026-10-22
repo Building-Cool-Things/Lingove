@@ -4,12 +4,15 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { ensureUserProfile, UserProfile } from "@/lib/user-profile";
+import { UserProfile } from "@/lib/user-profile";
 
-type OnboardingState = {
-  hasOnboarded: boolean;
-  occupation: string;
+export type OnboardingInput = {
+  nativeLanguage: string;
   interests: string[];
+  currentLevel: string;
+  dailyTimeSpend: number;
+  correctionStyle: "instant" | "end";
+  notifyLanguages: string[];
 };
 
 type OnboardingResult = { ok: boolean; message: string };
@@ -22,45 +25,21 @@ async function getCurrentUser() {
   return session?.user ?? null;
 }
 
-export async function getOnboardingState(): Promise<OnboardingState | null> {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return null;
-  }
-
-  const profile = await ensureUserProfile({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-  });
-
-  return {
-    hasOnboarded: Boolean(profile?.hasOnboarded),
-    occupation: profile?.occupation ?? "",
-    interests: profile?.interests ?? [],
-  };
-}
-
-export async function completeOnboarding(data: {
-  occupation: string;
-  interests: string[];
-}): Promise<OnboardingResult> {
+export async function completeOnboarding(data: OnboardingInput): Promise<OnboardingResult> {
   const user = await getCurrentUser();
 
   if (!user) {
     throw new Error("Unauthorized");
   }
 
-  const occupation = data.occupation.trim();
-  const interests = data.interests.filter((v) => typeof v === "string" && v.trim().length > 0);
+  const interests = data.interests.filter((v) => typeof v === "string" && v.trim().length > 0).slice(0, 15);
 
-  if (!occupation) {
-    return { ok: false, message: "Please select what you do." };
+  if (!data.nativeLanguage) {
+    return { ok: false, message: "Please pick your native language." };
   }
 
-  if (interests.length === 0) {
-    return { ok: false, message: "Please pick at least one interest." };
+  if (interests.length < 3) {
+    return { ok: false, message: "Please pick at least 3 interests." };
   }
 
   await connectDB();
@@ -68,19 +47,19 @@ export async function completeOnboarding(data: {
   await UserProfile.updateOne(
     { authUserId: user.id },
     {
-      $set: { hasOnboarded: true, occupation, interests },
+      $set: {
+        hasOnboarded: true,
+        nativeLanguage: data.nativeLanguage,
+        interests,
+        currentLevel: data.currentLevel,
+        dailyTimeSpend: data.dailyTimeSpend,
+        correctionStyle: data.correctionStyle === "end" ? "end" : "instant",
+        notifyLanguages: data.notifyLanguages,
+      },
       $setOnInsert: { authUserId: user.id },
     },
     { upsert: true }
   );
 
   return { ok: true, message: "" };
-}
-
-
-export async function getUserProfile(userId:string){
-  const d = await UserProfile.find({
-    authUserId:userId
-  })
-  return d
 }

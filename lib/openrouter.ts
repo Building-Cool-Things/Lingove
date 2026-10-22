@@ -9,7 +9,7 @@ if (!process.env.OPENROUTER_API_KEY) {
 export const openrouter = new OpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
   httpReferer: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-  appTitle: "LingoVe",
+  appTitle: "Lingov",
 });
 
 // ── Models ────────────────────────────────────────────────────────────────────

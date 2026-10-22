@@ -9,6 +9,11 @@ export type UserProfileDocument = {
   hasOnboarded: boolean;
   occupation?: string;
   interests?: string[];
+  nativeLanguage?: string;
+  currentLevel?: string;
+  dailyTimeSpend?: number;
+  correctionStyle?: "instant" | "end";
+  notifyLanguages?: string[];
 
   // Writing progress
   writingDifficulty: "EASY" | "MEDIUM" | "HARD";
@@ -44,6 +49,11 @@ export type UserProfileDocument = {
   longestStreak: number;
   lastActivityAt: Date | null;
   totalVocabLearned: number;
+  weeklyXp: number;
+  overallRank?: number;
+  weeklyRank?: number;
+  activeDays: Date[];
+  incidentsCompleted: number;
 
   totalXP: number;
   level: number;
@@ -61,6 +71,11 @@ const userProfileSchema = new Schema<UserProfileDocument>(
     hasOnboarded: { type: Boolean, required: true, default: false },
     occupation: { type: String, default: "" },
     interests: { type: [String], default: [] },
+    nativeLanguage: { type: String, default: "" },
+    currentLevel: { type: String, enum: ["A1", "A2", "B1", "B2", "C1"], default: "A1" },
+    dailyTimeSpend: { type: Number, default: 10 },
+    correctionStyle: { type: String, enum: ["instant", "end"] as const, default: "instant" },
+    notifyLanguages: { type: [String], default: [] },
 
     writingDifficulty: { type: String, enum: ["EASY", "MEDIUM", "HARD"] as const, default: "EASY" },
     writingRecentScores: { type: [Number], default: [] },
@@ -90,8 +105,13 @@ const userProfileSchema = new Schema<UserProfileDocument>(
     longestStreak: { type: Number, default: 0 },
     lastActivityAt: { type: Date, default: null },
     totalVocabLearned: { type: Number, default: 0 },
+    weeklyXp: { type: Number, default: 0, index: -1 },
+    overallRank: Number,
+    weeklyRank: Number,
+    activeDays: { type: [Date], default: [] },
+    incidentsCompleted: { type: Number, default: 0 },
 
-    totalXP: { type: Number, default: 0 },
+    totalXP: { type: Number, default: 0, index: -1 },
     level: { type: Number, default: 1 },
     xpForNextLevel: { type: Number, default: 100 },
   },
@@ -127,6 +147,6 @@ export async function ensureUserProfile(user: {
         name: user.name ?? null,
       },
     },
-    { new: true, upsert: true }
+    { returnDocument: "after", upsert: true }
   ).lean<UserProfileDocument>();
 }

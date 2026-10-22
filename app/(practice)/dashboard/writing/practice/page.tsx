@@ -146,41 +146,41 @@ export default function WritingPracticePage() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left — tinted question panel */}
-        <div className="flex w-full shrink-0 flex-col overflow-y-auto border-r border-indigo-100 bg-indigo-50/60 px-7 py-8 dark:border-indigo-900/40 dark:bg-indigo-950/20 lg:w-[44%] xl:px-10">
+        <div className="flex w-full shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-7 py-8 lg:w-[44%] xl:px-10">
 
-          <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-400 dark:text-indigo-500">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#1d8a50] dark:text-[#7fe3a8]">
             Writing Prompt
           </p>
 
           {isLoading ? (
             <div className="mt-5 space-y-3">
               {[3/4, 1, 5/6, 2/3].map((w, i) => (
-                <div key={i} className="h-6 animate-pulse rounded-lg bg-indigo-100 dark:bg-indigo-900/40" style={{ width: `${w * 100}%` }} />
+                <div key={i} className="h-6 animate-pulse rounded-lg bg-muted" style={{ width: `${w * 100}%` }} />
               ))}
             </div>
           ) : (
-            <p className="mt-5 text-xl font-semibold leading-9 tracking-tight text-indigo-950 dark:text-indigo-100">
+            <p className="mt-5 text-xl font-semibold leading-9 tracking-tight text-foreground">
               {question?.prompt}
             </p>
           )}
 
           {/* Tips */}
           <div className="mt-10">
-            <p className="mb-4 text-[11px] font-bold uppercase tracking-widest text-indigo-400 dark:text-indigo-500">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-[#1d8a50] dark:text-[#7fe3a8]">
               Tips
             </p>
             <ul className="space-y-3">
               {(isLoading ? Array(3).fill("") : (question?.tips ?? [])).map((tip, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className={cn(
-                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
                     TIP_ACCENT[i] ?? TIP_ACCENT[0]
                   )}>
                     {i + 1}
                   </span>
                   {isLoading
-                    ? <span className="mt-0.5 h-4 w-44 animate-pulse rounded bg-indigo-100 dark:bg-indigo-900/40" />
-                    : <span className="text-sm leading-5 text-indigo-800 dark:text-indigo-200">{tip}</span>}
+                    ? <span className="mt-0.5 h-4 w-44 animate-pulse rounded bg-muted" />
+                    : <span className="text-sm leading-5 text-foreground">{tip}</span>}
                 </li>
               ))}
             </ul>
@@ -194,7 +194,7 @@ export default function WritingPracticePage() {
         </div>
 
         {/* Right — writing surface (desktop) */}
-        <div className="hidden flex-1 flex-col bg-white dark:bg-zinc-950 lg:flex">
+        <div className="hidden flex-1 flex-col bg-background lg:flex">
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -232,7 +232,7 @@ export default function WritingPracticePage() {
         </div>
 
         {/* Mobile writing area */}
-        <div className="flex w-full flex-col border-t border-border bg-white dark:bg-zinc-950 lg:hidden">
+        <div className="flex w-full flex-col border-t border-border bg-background lg:hidden">
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

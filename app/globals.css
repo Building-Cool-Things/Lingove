@@ -5,11 +5,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-track: var(--track);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-heading);
+  --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,72 +50,98 @@
 }
 
 :root {
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.488 0.243 264.376);
-  --primary-foreground: oklch(0.97 0.014 254.604);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.546 0.245 262.881);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(96.956% 0.0148 281.884);
-  --foreground: oklch(0.145 0 0);
+  --background: #f5f8f6;
+  --foreground: #0b1410;
+  --card: #ffffff;
+  --card-foreground: #0b1410;
+  --popover: #ffffff;
+  --popover-foreground: #0b1410;
+  --primary: #1d8a50;
+  --primary-foreground: #ffffff;
+  --secondary: #e7f5ed;
+  --secondary-foreground: #14653a;
+  --muted: #edf2ef;
+  --muted-foreground: #5b6b64;
+  --accent: #ffe3d3;
+  --accent-foreground: #2a1206;
+  --destructive: #ea7a4f;
+  --border: #dbe4df;
+  --input: #cfdad4;
+  --ring: #1d8a50;
+  --chart-1: #1d8a50;
+  --chart-2: #7fe3a8;
+  --chart-3: #ffb38f;
+  --chart-4: #4cc283;
+  --chart-5: #14653a;
+  --radius: 0.75rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0b1410;
+  --sidebar-primary: #1d8a50;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7f5ed;
+  --sidebar-accent-foreground: #0b1410;
+  --sidebar-border: #dbe4df;
+  --sidebar-ring: #1d8a50;
+  --card-shadow: 0 1px 2px rgba(16, 24, 20, .06), 0 12px 28px -20px rgba(16, 24, 20, .25);
+  --track: #e3ebe6;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.424 0.199 265.638);
-  --primary-foreground: oklch(0.97 0.014 254.604);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.623 0.214 259.815);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #040608;
+  --foreground: #eaeef7;
+  --card: #0a0e16;
+  --card-foreground: #eaeef7;
+  --popover: #0a0e16;
+  --popover-foreground: #eaeef7;
+  --primary: #1d8a50;
+  --primary-foreground: #ffffff;
+  --secondary: #0e2417;
+  --secondary-foreground: #d3f5e1;
+  --muted: #0f1624;
+  --muted-foreground: #94a3c0;
+  --accent: #ffb38f;
+  --accent-foreground: #2a1206;
+  --destructive: #ea7a4f;
+  --border: #182033;
+  --input: #1c2538;
+  --ring: #1d8a50;
+  --chart-1: #1d8a50;
+  --chart-2: #7fe3a8;
+  --chart-3: #ffb38f;
+  --chart-4: #4cc283;
+  --chart-5: #d3f5e1;
+  --sidebar: #06090e;
+  --sidebar-foreground: #eaeef7;
+  --sidebar-primary: #1d8a50;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0e2417;
+  --sidebar-accent-foreground: #eaeef7;
+  --sidebar-border: #121a29;
+  --sidebar-ring: #1d8a50;
+  --card-shadow: inset 0 1px 0 rgba(255, 255, 255, .035), 0 16px 32px -20px rgba(0, 0, 0, .9);
+  --track: #131b2a;
+}
+
+
+/* Existing pages use stock Tailwind palettes; fold them into the Lingov palette. */
+@theme {
+  --color-emerald-50: #eefbf3; --color-emerald-100: #d3f5e1; --color-emerald-200: #a9ebc4; --color-emerald-300: #7fe3a8; --color-emerald-400: #4cc283; --color-emerald-500: #22975a; --color-emerald-600: #1d8a50; --color-emerald-700: #187544; --color-emerald-800: #14653a; --color-emerald-900: #143a25; --color-emerald-950: #0e2417;
+  --color-green-50: #eefbf3; --color-green-100: #d3f5e1; --color-green-200: #a9ebc4; --color-green-300: #7fe3a8; --color-green-400: #4cc283; --color-green-500: #22975a; --color-green-600: #1d8a50; --color-green-700: #187544; --color-green-800: #14653a; --color-green-900: #143a25; --color-green-950: #0e2417;
+  --color-teal-50: #eefbf3; --color-teal-100: #d3f5e1; --color-teal-200: #a9ebc4; --color-teal-300: #7fe3a8; --color-teal-400: #4cc283; --color-teal-500: #22975a; --color-teal-600: #1d8a50; --color-teal-700: #187544; --color-teal-800: #14653a; --color-teal-900: #143a25; --color-teal-950: #0e2417;
+  --color-cyan-50: #eefbf3; --color-cyan-100: #d3f5e1; --color-cyan-200: #a9ebc4; --color-cyan-300: #7fe3a8; --color-cyan-400: #4cc283; --color-cyan-500: #22975a; --color-cyan-600: #1d8a50; --color-cyan-700: #187544; --color-cyan-800: #14653a; --color-cyan-900: #143a25; --color-cyan-950: #0e2417;
+  --color-indigo-50: #eefbf3; --color-indigo-100: #d3f5e1; --color-indigo-200: #a9ebc4; --color-indigo-300: #7fe3a8; --color-indigo-400: #4cc283; --color-indigo-500: #22975a; --color-indigo-600: #1d8a50; --color-indigo-700: #187544; --color-indigo-800: #14653a; --color-indigo-900: #143a25; --color-indigo-950: #0e2417;
+  --color-violet-50: #eefbf3; --color-violet-100: #d3f5e1; --color-violet-200: #a9ebc4; --color-violet-300: #7fe3a8; --color-violet-400: #4cc283; --color-violet-500: #22975a; --color-violet-600: #1d8a50; --color-violet-700: #187544; --color-violet-800: #14653a; --color-violet-900: #143a25; --color-violet-950: #0e2417;
+  --color-purple-50: #eefbf3; --color-purple-100: #d3f5e1; --color-purple-200: #a9ebc4; --color-purple-300: #7fe3a8; --color-purple-400: #4cc283; --color-purple-500: #22975a; --color-purple-600: #1d8a50; --color-purple-700: #187544; --color-purple-800: #14653a; --color-purple-900: #143a25; --color-purple-950: #0e2417;
+  --color-blue-50: #eefbf3; --color-blue-100: #d3f5e1; --color-blue-200: #a9ebc4; --color-blue-300: #7fe3a8; --color-blue-400: #4cc283; --color-blue-500: #22975a; --color-blue-600: #1d8a50; --color-blue-700: #187544; --color-blue-800: #14653a; --color-blue-900: #143a25; --color-blue-950: #0e2417;
+  --color-sky-50: #eefbf3; --color-sky-100: #d3f5e1; --color-sky-200: #a9ebc4; --color-sky-300: #7fe3a8; --color-sky-400: #4cc283; --color-sky-500: #22975a; --color-sky-600: #1d8a50; --color-sky-700: #187544; --color-sky-800: #14653a; --color-sky-900: #143a25; --color-sky-950: #0e2417;
+  --color-lime-50: #eefbf3; --color-lime-100: #d3f5e1; --color-lime-200: #a9ebc4; --color-lime-300: #7fe3a8; --color-lime-400: #4cc283; --color-lime-500: #22975a; --color-lime-600: #1d8a50; --color-lime-700: #187544; --color-lime-800: #14653a; --color-lime-900: #143a25; --color-lime-950: #0e2417;
+  --color-fuchsia-50: #eefbf3; --color-fuchsia-100: #d3f5e1; --color-fuchsia-200: #a9ebc4; --color-fuchsia-300: #7fe3a8; --color-fuchsia-400: #4cc283; --color-fuchsia-500: #22975a; --color-fuchsia-600: #1d8a50; --color-fuchsia-700: #187544; --color-fuchsia-800: #14653a; --color-fuchsia-900: #143a25; --color-fuchsia-950: #0e2417;
+  --color-rose-50: #fdf2ee; --color-rose-100: #fbe0d5; --color-rose-200: #f6c1ab; --color-rose-300: #f19f80; --color-rose-400: #ec8a64; --color-rose-500: #ea7a4f; --color-rose-600: #d4643a; --color-rose-700: #b0502d; --color-rose-800: #7a3a22; --color-rose-900: #4a2416; --color-rose-950: #2a140c;
+  --color-red-50: #fdf2ee; --color-red-100: #fbe0d5; --color-red-200: #f6c1ab; --color-red-300: #f19f80; --color-red-400: #ec8a64; --color-red-500: #ea7a4f; --color-red-600: #d4643a; --color-red-700: #b0502d; --color-red-800: #7a3a22; --color-red-900: #4a2416; --color-red-950: #2a140c;
+  --color-pink-50: #fdf2ee; --color-pink-100: #fbe0d5; --color-pink-200: #f6c1ab; --color-pink-300: #f19f80; --color-pink-400: #ec8a64; --color-pink-500: #ea7a4f; --color-pink-600: #d4643a; --color-pink-700: #b0502d; --color-pink-800: #7a3a22; --color-pink-900: #4a2416; --color-pink-950: #2a140c;
+  --color-amber-50: #fff5ef; --color-amber-100: #ffe3d3; --color-amber-200: #ffd0b6; --color-amber-300: #ffc6a8; --color-amber-400: #ffb38f; --color-amber-500: #f6a07a; --color-amber-600: #e0855d; --color-amber-700: #b5653f; --color-amber-800: #7d4428; --color-amber-900: #4a2a19; --color-amber-950: #2a1206;
+  --color-orange-50: #fff5ef; --color-orange-100: #ffe3d3; --color-orange-200: #ffd0b6; --color-orange-300: #ffc6a8; --color-orange-400: #ffb38f; --color-orange-500: #f6a07a; --color-orange-600: #e0855d; --color-orange-700: #b5653f; --color-orange-800: #7d4428; --color-orange-900: #4a2a19; --color-orange-950: #2a1206;
+  --color-yellow-50: #fff5ef; --color-yellow-100: #ffe3d3; --color-yellow-200: #ffd0b6; --color-yellow-300: #ffc6a8; --color-yellow-400: #ffb38f; --color-yellow-500: #f6a07a; --color-yellow-600: #e0855d; --color-yellow-700: #b5653f; --color-yellow-800: #7d4428; --color-yellow-900: #4a2a19; --color-yellow-950: #2a1206;
 }
 
 @layer base {
@@ -127,4 +154,71 @@
   html {
     @apply font-sans;
   }
+  @keyframes lgup {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
 }
+
+@utility animate-lgup {
+  animation: lgup 0.25s ease-out;
+}
+
+/* Lingov breakpoints: dk = desktop layout, wd = welcome brand panel, xw = chat context panel. */
+@theme {
+  --breakpoint-dk: 900px;
+  --breakpoint-wd: 1100px;
+  --breakpoint-xw: 1240px;
+}
+
+@keyframes lgdot { 0%, 60%, 100% { opacity: .35; transform: none; } 30% { opacity: 1; transform: translateY(-3px); } }
+@keyframes lgfade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lgspin { to { transform: rotate(360deg); } }
+@keyframes lgwave { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+@keyframes lgrec { 50% { opacity: .3; } }
+@keyframes lgload { from { width: 8%; } to { width: 100%; } }
+
+* { scrollbar-width: none; }
+::-webkit-scrollbar { width: 0; height: 0; }
+
+/* Prototype link style. */
+@utility lg-a {
+  color: #7fe3a8;
+  font-weight: 500;
+  text-decoration: none;
+  &:hover { color: #d3f5e1; text-decoration: underline; }
+}
+
+/* Raised surface used by every card in the Lingov design. */
+@utility lg-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+/* Icon tile (gradient chip behind lucide icons). */
+@utility lg-tile {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--muted) 70%, var(--foreground) 6%), var(--muted));
+  border: 1px solid var(--border);
+}
+
+/* Primary button highlight. */
+@utility lg-btn-shadow {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 1px 2px rgba(0, 0, 0, .4);
+}
+
+/* Text inputs. */
+@utility lg-input {
+  background: var(--card);
+  border: 1px solid var(--input);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .3);
+  outline: none;
+  transition: all .14s;
+  &:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(29, 138, 80, .35);
+  }
+}
+

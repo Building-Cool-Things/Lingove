@@ -7,7 +7,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { chat, MODELS } from "@/lib/openrouter";
 import { UserProfile, type UserProfileDocument } from "@/lib/user-profile";
-import { ReadingModel, type Reading, type IReadingQuestion } from "@/models/reading";
+import { LEVEL_LABELS, READING_XP, SESSION_QUESTIONS } from "@/lib/skill-config";
+import { ReadingModel, type Reading } from "@/models/reading";
 
 // ── JSON repair helper ────────────────────────────────────────────────────────
 function repairParseJson(raw: string): unknown {
@@ -43,7 +44,12 @@ export type ReadingTaskQuestion = {
   options: string[] | null;
   correctAnswer: string;
   explanation: string;
+  // Lingov session extras: 0-based paragraph holding the answer, skill tested.
+  paragraph?: number;
+  skill?: "details" | "tfng" | "vocab";
 };
+
+export type GlossaryWord = { word: string; ipa: string; meaning: string; native: string; partOfSpeech: string };
 
 export type ReadingTask = {
   title: string;
@@ -55,6 +61,7 @@ export type ReadingTask = {
   questions: ReadingTaskQuestion[];
   tips: string[];
   level: string;
+  glossary?: GlossaryWord[];
 };
 
 // ── Difficulty resolution ─────────────────────────────────────────────────────
@@ -123,7 +130,6 @@ const PASSAGE_CONFIG = {
   HARD:   { wordRange: "500–650", questionCount: 12,  questionTypes: "mix of MCQ, TRUE_FALSE_NG, and SHORT_ANSWER" },
 };
 
-const LEVEL_LABELS = { EASY: "A2-B1", MEDIUM: "B1-B2", HARD: "C1-C2" };
 
 const DIFFICULTY_GUIDE = {
   EASY: `
@@ -145,7 +151,8 @@ const DIFFICULTY_GUIDE = {
 
 // ── Generate reading task ─────────────────────────────────────────────────────
 
-export async function generateReadingTask(): Promise<ReadingTask> {
+// objectiveOnly: Lingov session format, exactly 5 MCQ / TRUE_FALSE_NG questions.
+export async function generateReadingTask(opts: { objectiveOnly?: boolean } = {}): Promise<ReadingTask> {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -166,7 +173,10 @@ export async function generateReadingTask(): Promise<ReadingTask> {
   );
 
   const topic = resolveTopic(recentTopics, interests);
-  const config = PASSAGE_CONFIG[difficulty];
+  const config = opts.objectiveOnly
+    ? { ...PASSAGE_CONFIG[difficulty], questionCount: SESSION_QUESTIONS, questionTypes: "MCQ and TRUE_FALSE_NG only" }
+    : PASSAGE_CONFIG[difficulty];
+  const native = profile?.nativeLanguage || "hi";
   const level = LEVEL_LABELS[difficulty];
 
   const reply = await chat(
@@ -211,6 +221,8 @@ For SHORT_ANSWER questions:
 - options should be null
 - correctAnswer is a model answer (1–2 sentences)
 
+The glossary lists 4-6 harder words from the passage.
+
 Return ONLY this JSON:
 {
   "title": "Short descriptive title (5 words max)",
@@ -223,8 +235,13 @@ Return ONLY this JSON:
       "type": "MCQ" | "TRUE_FALSE_NG" | "SHORT_ANSWER",
       "options": ["A. Option one", "B. Option two", "C. Option three", "D. Option four"] or null,
       "correctAnswer": "A" or "True" or "model answer text",
-      "explanation": "Why this is the correct answer, with reference to the passage"
+      "explanation": "Why this is the correct answer, with reference to the passage",
+      "paragraph": 0-based index of the paragraph that contains the answer,
+      "skill": "details" (find a stated fact) | "tfng" (true / false / not given) | "vocab" (word meaning in context)
     }
+  ],
+  "glossary": [
+    { "word": "one single word copied exactly as it appears in the passage", "ipa": "/IPA/", "meaning": "Simple English definition in one short sentence.", "native": "translation into the language with code ${native}", "partOfSpeech": "NOUN" | "VERB" | "ADJECTIVE" | "ADVERB" }
   ],
   "tips": [
     "Skim the passage first before answering",
@@ -243,6 +260,7 @@ Return ONLY this JSON:
     passage: string;
     questions: ReadingTaskQuestion[];
     tips: string[];
+    glossary?: GlossaryWord[];
   };
 
   await UserProfile.findOneAndUpdate(
@@ -266,6 +284,10 @@ Return ONLY this JSON:
     questions: parsed.questions,
     tips: parsed.tips ?? [],
     level,
+    // Only single words that really occur in the passage can be underlined.
+    glossary: (parsed.glossary ?? []).filter(
+      (g) => g?.word && /^[\p{L}'-]+$/u.test(g.word) && new RegExp(`\\b${g.word}\\b`, "i").test(parsed.passage),
+    ),
   };
 }
 
@@ -400,7 +422,6 @@ Note: newVocabulary should contain 4-6 interesting or challenging words from the
   return { results, generalFeedback, improvementPlan, newVocabulary };
 }
 
-const XP_BY_DIFFICULTY = { EASY: 30, MEDIUM: 60, HARD: 100 } as const;
 
 export async function submitReading(
   task: ReadingTask,
@@ -450,7 +471,7 @@ export async function submitReading(
     analysisStatus: "COMPLETED",
   });
 
-  const xpGained = XP_BY_DIFFICULTY[task.difficulty];
+  const xpGained = READING_XP[task.difficulty];
 
   const now = new Date();
   let newStreak = 1;
@@ -553,4 +574,16 @@ export async function getReadingSubmission(id: string): Promise<ReadingView | nu
   const doc = await ReadingModel.findById(id).lean<Reading>();
   if (!doc) return null;
   return serializeReading(doc);
+}
+
+// Lingov reading session: save and grade, then return the graded view and the XP earned.
+export async function submitReadingSession(
+  task: ReadingTask,
+  userAnswers: UserAnswer[],
+  timeTaken: number
+): Promise<{ view: ReadingView; xp: number }> {
+  const id = await submitReading(task, userAnswers, timeTaken);
+  const view = await getReadingSubmission(id);
+  if (!view) throw new Error("Reading submission not found");
+  return { view, xp: READING_XP[task.difficulty] };
 }
