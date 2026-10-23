@@ -7,7 +7,9 @@ const grammarTopicSchema = new Schema({
   slug: { type: String, required: true, unique: true }, // "past_simple"
   title: { type: String, required: true },
   level: { type: String, enum: LEVELS, required: true },
-  explanation: { type: String, required: true }, // lesson text, generated once
+  explanation: { type: String, required: true }, // one-line rule with a wrong/right example
+  // Full lesson (whatItIs, whenToUse, form, examples, commonMistakes, tips). Written once, never generated per user.
+  lesson: { type: Schema.Types.Mixed },
 });
 
 export const GrammarTopic = getModel("GrammarTopic", grammarTopicSchema);

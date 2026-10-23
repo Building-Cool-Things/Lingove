@@ -7,18 +7,19 @@ import { useRouter } from "next/navigation";
 
 import { generateReadingTask, submitReadingSession, type ReadingTask, type ReadingView } from "@/app/actions/reading";
 import { generateWritingQuestion, submitWritingSession, type WritingQuestion, type WritingView } from "@/app/actions/writing";
-import { CONV0, HINTS, LANGS, LEVELS, REPLIES, REPLY_FALLBACK, type Msg, type Tip } from "@/lib/lingov/data";
+import { LEVELS } from "@/lib/lingov/data";
 import type { LingovProfile } from "@/lib/lingov-data";
 import { SAMPLE_TASK, demoAnswers, gradeLocal, questionsOf } from "@/lib/lingov/reading";
 import { WS0, WS_DRAFT, WS_FIXED, analyse, analyseAI, splitText } from "@/lib/lingov/writing";
 import type { Difficulty } from "@/lib/skill-config";
 
+import { useChatState } from "./chat-state";
+
 export type State = {
-  // chats
-  chat: number | null; convs: Record<number, Msg[]>; draft: string; typing: boolean; tr: string[]; sheet: Tip | null;
-  hintOpen: boolean; cq: string; cf: string; started: number[]; rec: boolean; recS: number; play: { id: string; p: number } | null;
+  // chats (the conversations themselves live in useChatState)
+  cq: string; cf: string;
   // explore
-  exq: string; exi: string; saved: number[]; scen: number | null;
+  exq: string; saved: string[]; scen: string | null;
   // practice
   pt: number; fcI: number; fcFlip: boolean; exI: number; exSel: number | null; exChecked: boolean;
   // reading session (answers are the backend values: "A".."D" or "True" / "False" / "Not Given")
@@ -30,8 +31,8 @@ export type State = {
 };
 
 const INITIAL: State = {
-  chat: null, convs: CONV0, draft: "", typing: false, tr: [], sheet: null, hintOpen: false, cq: "", cf: "All", started: [], rec: false, recS: 0, play: null,
-  exq: "", exi: "All", saved: [], scen: null,
+  cq: "", cf: "All",
+  exq: "", saved: [], scen: null,
   pt: 0, fcI: 0, fcFlip: false, exI: 0, exSel: null, exChecked: false,
   rdTask: null, rdLoad: false, rdErr: "", rdT0: 0, rdDemo: false, rdRes: null,
   rdAns: {}, rdSub: false, rdChecking: false, rdOpen: null, rdFocus: null, rdW: null, rdSaved: [],
@@ -66,21 +67,22 @@ const DEMOS: Record<string, () => Partial<State>> = {
 };
 
 export type Me = {
-  name: string; initial: string; level: number; xp: number; xpNext: number; streak: number; nativeName: string;
+  name: string; initial: string; image: string; level: number; xp: number; xpNext: number; streak: number; nativeName: string;
   goal: number; today: number; levelCode: string; levelName: string; interests: number; corr: "instant" | "end"; missions: number; words: number;
   readDiff: Difficulty; writeDiff: Difficulty;
 };
 
-function makeMe(user: { name?: string | null; email: string }, p: LingovProfile): Me {
+function makeMe(user: { name?: string | null; email: string; image: string }, p: LingovProfile): Me {
   const name = user.name?.trim() || user.email.split("@")[0];
   const lv = LEVELS.find((l) => l[0] === p.currentLevel);
   return {
-    name, initial: name[0].toUpperCase(), level: p.level, xp: p.totalXP, xpNext: p.xpForNextLevel, streak: p.currentStreak,
-    nativeName: LANGS.find((l) => l[0] === p.nativeLanguage)?.[2] || p.nativeLanguage || "Hindi",
+    name, initial: name[0].toUpperCase(), image: user.image, level: p.level, xp: p.totalXP, xpNext: p.xpForNextLevel, streak: p.currentStreak,
+    nativeName: p.nativeLanguage || "Hindi",
     // ponytail: minutes practised today are not tracked yet, dummy 8 like the prototype (REPLACE.md).
     goal: p.dailyTimeSpend || 10, today: 8,
     levelCode: lv?.[0] ?? "A2", levelName: lv?.[1] ?? "Elementary", interests: p.interests.length,
-    corr: p.correctionStyle === "end" ? "end" : "instant", missions: p.incidentsCompleted, words: p.totalVocabLearned,
+    // corr is always instant until a correction-style setting exists
+    corr: "instant", missions: p.incidentsCompleted, words: p.totalVocabLearned,
     readDiff: p.readingDifficulty, writeDiff: p.writingDifficulty,
   };
 }
@@ -88,7 +90,7 @@ function makeMe(user: { name?: string | null; email: string }, p: LingovProfile)
 type Ctx = ReturnType<typeof useLingovState>;
 const LingovCtx = createContext<Ctx | null>(null);
 
-function useLingovState(user: { name?: string | null; email: string }, profile: LingovProfile) {
+function useLingovState(user: { name?: string | null; email: string; image: string }, profile: LingovProfile) {
   const router = useRouter();
   const [S, setS] = useState<State>(INITIAL);
   const [ready, setReady] = useState(false);
@@ -120,60 +122,8 @@ function useLingovState(user: { name?: string | null; email: string }, profile: 
     try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch { /* storage unavailable */ }
   }, [ready, rdTask, rdAns, rdT0, rdDemo, rdSub, wsQ, wsText, wsDemo, wsDone]);
 
-  const timers = useRef<{ ri?: number; pi?: number; rt?: number; vn: number; rdBusy?: boolean; wsBusy?: boolean }>({ vn: 0 });
-  useEffect(() => () => {
-    const t = timers.current;
-    clearInterval(t.ri); clearInterval(t.pi); clearTimeout(t.rt);
-  }, []);
-
-  // ── chats ──
-  // Desktop shows chat 0 when none is picked; on mobile the composer only exists once a chat is open.
-  const push = useCallback((text: string, extra?: Partial<Msg>) => {
-    const s0 = sRef.current, i = s0.chat ?? 0;
-    if (!text || s0.typing) return;
-    const mine = s0.convs[i].filter((m) => !m.ai).length;
-    set((s) => ({ convs: { ...s.convs, [i]: [...s.convs[i], { id: "u" + Date.now(), text, time: "9:4" + Math.min(9, 2 + mine), ...extra }] }, draft: "", typing: true, hintOpen: false }));
-    clearTimeout(timers.current.rt);
-    timers.current.rt = window.setTimeout(() => {
-      const pool = REPLIES[i], r = pool[Math.min(pool.length - 1, Math.max(0, mine - (i === 0 ? 1 : 0)))] || REPLY_FALLBACK;
-      set((s) => ({ convs: { ...s.convs, [i]: [...s.convs[i], { id: "r" + Date.now(), ai: 1, text: r[0], hi: r[1], time: "9:4" + Math.min(9, 3 + mine) }] }, typing: false }));
-    }, 1300);
-  }, [set]);
-
-  const cancelRec = useCallback(() => { clearInterval(timers.current.ri); set({ rec: false, recS: 0 }); }, [set]);
-  const startRec = useCallback(() => {
-    if (sRef.current.typing) return;
-    clearInterval(timers.current.ri);
-    set({ rec: true, recS: 0, hintOpen: false });
-    timers.current.ri = window.setInterval(() => set((s) => (s.recS >= 59 ? { recS: 60 } : { recS: s.recS + 1 })), 1000);
-  }, [set]);
-  const sendVoice = useCallback(() => {
-    const secs = Math.max(2, sRef.current.recS);
-    clearInterval(timers.current.ri);
-    set({ rec: false, recS: 0 });
-    timers.current.vn += 1;
-    push(HINTS[timers.current.vn % 3], { voice: secs });
-  }, [push, set]);
-  const togglePlay = useCallback((id: string) => {
-    clearInterval(timers.current.pi);
-    const s0 = sRef.current;
-    if (s0.play?.id === id) return set({ play: null });
-    const m = Object.values(s0.convs).flat().find((x) => x.id === id);
-    const dur = m?.voice ?? 3;
-    set({ play: { id, p: 0 } });
-    timers.current.pi = window.setInterval(() => set((s) => {
-      if (!s.play) return null;
-      const p = s.play.p + 0.1;
-      if (p >= dur) { clearInterval(timers.current.pi); return { play: null }; }
-      return { play: { id: s.play.id, p } };
-    }), 100);
-  }, [set]);
-  const openChat = useCallback((i: number) => { cancelRec(); set({ chat: i, hintOpen: false, sheet: null, play: null }); }, [cancelRec, set]);
-  const closeChat = useCallback(() => { cancelRec(); set({ chat: null, sheet: null, hintOpen: false, play: null }); }, [cancelRec, set]);
-  const goChat = useCallback((i: number, startPersona = false) => {
-    set((s) => ({ chat: i, hintOpen: false, sheet: null, ...(startPersona && !s.started.includes(i) ? { started: [...s.started, i] } : {}) }));
-    router.push("/dashboard/chats");
-  }, [router, set]);
+  const timers = useRef<{ rdBusy?: boolean; wsBusy?: boolean }>({});
+  const chat = useChatState();
 
   // ── reading session (app/actions/reading.ts) ──
   const loadReading = useCallback(async () => {
@@ -264,12 +214,12 @@ function useLingovState(user: { name?: string | null; email: string }, profile: 
   const me = useMemo(() => makeMe(user, profile), [user, profile]);
 
   return {
-    S, set, me, ready, push, startRec, cancelRec, sendVoice, togglePlay, openChat, closeChat, goChat,
+    S, set, me, ready, ...chat,
     loadReading, openReading, submitReading, loadWriting, openWriting, checkWriting, applyDemo,
   };
 }
 
-export function LingovProvider({ user, profile, children }: { user: { name?: string | null; email: string }; profile: LingovProfile; children: React.ReactNode }) {
+export function LingovProvider({ user, profile, children }: { user: { name?: string | null; email: string; image: string }; profile: LingovProfile; children: React.ReactNode }) {
   const value = useLingovState(user, profile);
   return <LingovCtx.Provider value={value}>{children}</LingovCtx.Provider>;
 }

@@ -7,5 +7,5 @@ export default async function OnboardingPage() {
   const data = await getLingovData();
   if (!data) redirect("/");
   if (data.profile.hasOnboarded) redirect("/dashboard");
-  return <Onboarding />;
+  return <Onboarding name={data.user.name} image={data.user.image} />;
 }

@@ -1,27 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Download, Pencil, Search, Share, SquarePlus, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Search, Zap } from "lucide-react";
 
 import { completeOnboarding } from "@/app/actions/onboarding";
 import { signOut } from "@/lib/auth-client";
-import { GOALS, INTS, LANGS, LEVELS, MODES, ONB_TITLES, TARGETS, norm } from "@/lib/lingov/data";
+import { AVATARS, GOALS, INTS, LANGS, LEVELS, ONB_TITLES, TARGETS, norm } from "@/lib/lingov/data";
 import { cn } from "@/lib/utils";
 
-import { BrandMark, btnPress, btnPrimary, btnShadow, card, input } from "./ui";
+import { Pic, btnPress, btnPrimary, btnShadow, input } from "./ui";
 
-const TOTAL = 7;
+const TOTAL = 6;
 const row = "rounded-[12px] border-[1.5px] flex items-center gap-3 cursor-pointer transition-all duration-150";
 const sel = (on: boolean) => (on ? "border-[#1d8a50] bg-[#0e2417]" : "border-[#1a2235] bg-[#0a0e16] hover:border-[#1d8a50]");
 const search = `w-full h-[44px] pl-[38px] pr-3 text-[14.5px] ${input}`;
 const stepIcon = (on: boolean) => ({ opacity: on ? 1 : 0, transform: `scale(${on ? 1 : 0.5})`, transition: "all .2s cubic-bezier(.2,1.4,.4,1)" });
 
-type InstallEvent = Event & { prompt: () => Promise<void> };
-
-export function Onboarding() {
+export function Onboarding({ name: googleName, image: googleImage }: { name: string; image: string }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [name, setName] = useState(googleName ?? "");
+  const [image, setImage] = useState(googleImage || AVATARS[0]);
   const [q, setQ] = useState("");
   const [iq, setIq] = useState("");
   const [native, setNative] = useState("hi");
@@ -29,17 +29,9 @@ export function Onboarding() {
   const [ints, setInts] = useState(["food", "travel", "music"]);
   const [level, setLevel] = useState("A2");
   const [goal, setGoal] = useState(10);
-  const [corr, setCorr] = useState<"instant" | "end">("instant");
   const [notify, setNotify] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const installEvt = useRef<InstallEvent | null>(null);
-
-  useEffect(() => {
-    const on = (e: Event) => { e.preventDefault(); installEvt.current = e as InstallEvent; };
-    window.addEventListener("beforeinstallprompt", on);
-    return () => window.removeEventListener("beforeinstallprompt", on);
-  }, []);
 
   // Done screen → home.
   useEffect(() => {
@@ -50,15 +42,15 @@ export function Onboarding() {
 
   const fin = step > TOTAL;
   const icount = ints.length;
-  const cant = (step === 3 && icount < 3) || busy;
-  const hint = err || (step === 3 ? (icount < 3 ? "Pick " + (3 - icount) + " more to continue" : icount + " selected") : "");
+  const cant = (step === 1 && !name.trim()) || (step === 4 && icount < 3) || busy;
+  const hint = err || (step === 4 ? (icount < 3 ? "Pick " + (3 - icount) + " more to continue" : icount + " selected") : "");
 
   async function next() {
     if (cant) return;
     if (step < TOTAL) return setStep(step + 1);
     setBusy(true);
     setErr("");
-    const r = await completeOnboarding({ nativeLanguage: native, interests: ints, currentLevel: level, dailyTimeSpend: goal, correctionStyle: corr, notifyLanguages: notify });
+    const r = await completeOnboarding({ name, image, nativeLanguage: native, interests: ints, currentLevel: level, dailyTimeSpend: goal, notifyLanguages: notify });
     setBusy(false);
     if (!r.ok) return setErr(r.message);
     setStep(TOTAL + 1);
@@ -94,6 +86,25 @@ export function Onboarding() {
 
         {step === 1 && (
           <>
+            <div className="flex flex-col gap-[7px]">
+              <label htmlFor="ob-name" className="text-[13.5px] font-medium">Your name</label>
+              <input id="ob-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={50} placeholder="Ashfaq" autoComplete="name" className={`h-[46px] px-[14px] text-[15px] ${input}`} />
+            </div>
+            <div className="flex flex-col gap-[9px]">
+              <span className="text-[13.5px] font-medium">Your picture</span>
+              <div className="flex flex-wrap gap-3">
+                {[...(googleImage.startsWith("http") ? [googleImage] : []), ...AVATARS].map((a) => (
+                  <button key={a} type="button" onClick={() => setImage(a)} aria-label="Choose picture" className={cn("flex size-16 cursor-pointer items-center justify-center rounded-full border-2 bg-[#0a0e16] text-[30px] transition-all duration-150", image === a ? "border-[#1d8a50] bg-[#0e2417]" : "border-[#1a2235] hover:border-[#1d8a50]")}>
+                    <Pic image={a} initial="" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
             <div className="relative">
               <Search size={14.5} className="absolute left-[13px] top-1/2 -translate-y-1/2 text-[#94a3c0]" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search 100+ languages" className={search} />
@@ -110,7 +121,7 @@ export function Onboarding() {
           </>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="flex flex-col gap-2">
             {TARGETS.map(([k, name, note]) => {
               const live = k === "en", on = target === k, wl = notify.includes(k);
@@ -132,7 +143,7 @@ export function Onboarding() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
             <div className="flex items-center gap-[10px]">
               <div className="relative flex-1">
@@ -164,7 +175,7 @@ export function Onboarding() {
           </>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <>
             <div className="flex flex-col gap-2">
               {LEVELS.map(([code, name, desc]) => {
@@ -183,7 +194,7 @@ export function Onboarding() {
           </>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div className="grid grid-cols-2 gap-[10px]">
             {GOALS.map(([min, tag]) => {
               const on = goal === min;
@@ -196,48 +207,6 @@ export function Onboarding() {
               );
             })}
           </div>
-        )}
-
-        {step === 6 && (
-          <>
-            <div className="flex flex-col gap-2">
-              {MODES.map(([k, name, desc]) => {
-                const on = corr === k;
-                return (
-                  <div key={k} onClick={() => setCorr(k)} className={cn(row, "p-[14px]", sel(on))}>
-                    <span className={cn("flex size-[18px] flex-none items-center justify-center rounded-full border-[1.5px]", on ? "border-[#1d8a50]" : "border-[#4f6085]")}>
-                      <span className="size-2 rounded-full bg-[#1d8a50] transition-transform duration-[.16s]" style={{ transform: `scale(${on ? 1 : 0})` }} />
-                    </span>
-                    <div className="flex flex-1 flex-col gap-[2px]"><span className="text-[15.5px] font-medium">{name}</span><span className="text-[13px] leading-[1.4] text-[#94a3c0]">{desc}</span></div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-col gap-[10px] rounded-[20px] border border-[#182033] bg-[#0a0e16] p-[14px] shadow-[inset_0_1px_0_rgba(255,255,255,.035),0_16px_32px_-20px_rgba(0,0,0,.9)]">
-              <span className="text-[11.5px] font-semibold tracking-[.04em] text-[#94a3c0]">PREVIEW</span>
-              <div className="self-end rounded-[16px_4px_16px_16px] bg-[#1d8a50] px-[13px] py-[9px] text-[14.5px] text-white">I am want a table</div>
-              {corr === "instant" && <span className="flex items-center gap-[6px] self-end rounded-full bg-[rgba(255,179,143,.14)] px-[10px] py-[3px] text-[12px] font-semibold text-[#ffb38f]"><Pencil size={12} />1 tip</span>}
-              {corr === "end" && <span className="self-end text-[12px] text-[#94a3c0]">Tips appear in your summary</span>}
-            </div>
-          </>
-        )}
-
-        {step === 7 && (
-          <>
-            <div className={cn(card, "flex flex-col items-start gap-[14px] p-5")}>
-              <BrandMark size={56} word={false} />
-              <div className="flex flex-col gap-1"><span className="text-[18px] font-semibold">Lingov</span><span className="text-[13.5px] leading-[1.5] text-[#94a3c0]">Opens full screen, loads fast on slow networks and keeps your streak one tap away.</span></div>
-              <div className="flex w-full flex-col gap-[10px] border-t border-[#141b2b] pt-[14px]">
-                {([[Share, "Tap Share in Safari"], [SquarePlus, "Choose Add to Home Screen"]] as const).map(([Icon, t]) => (
-                  <div key={t} className="flex items-center gap-[10px] text-[14px] font-semibold">
-                    <span className="flex size-[26px] items-center justify-center rounded-[7px] border border-[#1b2538] bg-[linear-gradient(180deg,#141d2f,#0e1523)]"><Icon size={14} /></span>{t}
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Native install prompt when the browser offers one (needs a web manifest, see REPLACE.md). */}
-            <button onClick={() => installEvt.current?.prompt()} className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-[#252f4a] bg-[#090d15] text-[15px] font-medium text-[#eaeef7] hover:bg-[#0a0f1a]"><Download size={15} />Install on Android</button>
-          </>
         )}
 
         {fin && (

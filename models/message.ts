@@ -2,13 +2,17 @@ import { Schema, type InferSchemaType, type Types } from "mongoose";
 
 import { getModel } from "./_shared";
 
-const sentenceCheckSchema = new Schema(
+// One English mistake found in a user message.
+const mistakeSchema = new Schema(
   {
-    text: { type: String, required: true },
-    isError: { type: Boolean, default: false },
-    corrected: String, // only if isError
-    explanation: String, // only if isError
-    topicSlug: String, // grammar topic, e.g. "past_simple"
+    wrong: { type: String, required: true }, // exact words the user wrote
+    right: { type: String, required: true }, // the corrected words
+    why: { type: String, required: true }, // short reason in simple English
+    whyNative: String, // same reason in the user's native language
+    // A mistake can break several rules at once. Every slug exists in GrammarTopic.
+    topicSlugs: { type: [String], default: [] },
+    // "grammar" when topicSlugs is filled. "other" is a mistake no grammar topic covers.
+    category: { type: String, enum: ["grammar", "spelling", "word_choice", "punctuation", "register", "other"], default: "grammar" },
   },
   { _id: false }
 );
@@ -21,8 +25,8 @@ const messageSchema = new Schema(
     senderType: { type: String, enum: ["user", "character", "guide", "system"], required: true },
     senderId: { type: String, required: true }, // user id / character id / guide id
     text: { type: String, required: true },
-    tags: { type: [String], default: [] }, // @tagged character ids
-    sentences: { type: [sentenceCheckSchema], default: [] }, // user messages only
+    mistakes: { type: [mistakeSchema], default: [] }, // user messages only
+    translation: String, // filled the first time the user taps Translate
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

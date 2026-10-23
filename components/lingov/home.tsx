@@ -2,21 +2,26 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ChevronRight, Flame, Layers, MessageCircle, Utensils } from "lucide-react";
+import { ArrowRight, ChevronRight, Flame, Layers, MessageCircle } from "lucide-react";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { RECS, SKILLS, WEAK } from "@/lib/lingov/data";
 import { cn } from "@/lib/utils";
 
 import { pageCol } from "./app-shell";
 import { useUpcoming } from "./practice";
 import { useLingov } from "./store";
-import { btnPress, btnPrimary, card, h2, levelPill, tile, track } from "./ui";
+import { Pic, card, h2, levelPill, tile, track } from "./ui";
 
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
 
 export function Home() {
   const router = useRouter();
-  const { me, set, goChat, openReading, openWriting } = useLingov();
+  const { me, set, chats, goChat, openReading, openWriting } = useLingov();
+  const current = chats?.find((c) => !c.completed);
   const left = Math.max(0, me.goal - me.today);
   const up = useUpcoming();
   const toPractice = (pt: number) => () => set({ pt });
@@ -24,7 +29,7 @@ export function Home() {
   return (
     <div className={cn(pageCol, "flex flex-col content-start gap-[22px] dk:grid dk:grid-cols-6 dk:gap-5")}>
       <div className="col-span-full flex flex-none items-center gap-3">
-        <button onClick={() => router.push("/dashboard/profile")} aria-label="Profile" className="size-11 flex-none cursor-pointer rounded-full border-0 bg-[#ffb38f] text-[16px] font-semibold text-[#2a1206]">{me.initial}</button>
+        <button onClick={() => router.push("/dashboard/profile")} aria-label="Profile" className="size-11 flex-none cursor-pointer rounded-full border-0 bg-[#ffb38f] text-[16px] font-semibold text-[#2a1206]"><Pic image={me.image} initial={me.initial} /></button>
         <div className="flex flex-1 flex-col">
           <span suppressHydrationWarning className="text-[13px] text-[#94a3c0]">{greeting()}</span>
           <span className="text-[19px] font-semibold tracking-[-.02em]">Hi {me.name}</span>
@@ -53,16 +58,24 @@ export function Home() {
 
       <div className="order-2 flex flex-none flex-col gap-[10px] dk:col-span-3">
         <span className={h2}>Continue</span>
-        {/* dummy: last chat preview, see REPLACE.md */}
-        <div className={cn(card, "flex flex-col gap-3 p-[14px]")}>
-          <div className="flex items-center gap-3">
-            <div className={cn(tile, "size-12 flex-none rounded-full text-[20px]")}><Utensils size={20} /></div>
-            <div className="flex min-w-0 flex-1 flex-col gap-[2px]"><span className="text-[15.5px] font-semibold">Order dinner for two</span><span className="truncate text-[13px] text-[#94a3c0]">Maria: Would you like to see the menu?</span></div>
-            <span className="self-start text-[11.5px] text-[#94a3c0]">2m</span>
-          </div>
-          <div className="flex items-center gap-[10px]"><div className={cn(track, "flex-1")}><div className="h-full w-1/2 rounded-full bg-[#1d8a50]" /></div><span className="text-[12px] font-medium tabular-nums text-[#94a3c0]">2/4 goals</span></div>
-          <button onClick={() => goChat(0)} className={cn("h-11 rounded-[12px] text-[15px]", btnPrimary, btnPress)}><MessageCircle size={15} />Continue chat</button>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <Avatar size="xl"><AvatarFallback><MessageCircle size={20} /></AvatarFallback></Avatar>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-[15.5px] font-semibold">{current ? current.scenarioTitle : "Start your first mission"}</span>
+                <span className="truncate text-[13px] text-muted-foreground">{current ? current.lastText || current.incidentTitle : "Chat with characters in a real story and learn from your mistakes."}</span>
+              </div>
+            </div>
+            {current && (
+              <div className="flex items-center gap-2.5">
+                <Progress value={current.total ? (current.done / current.total) * 100 : 0} className="flex-1" />
+                <span className="text-[12px] font-medium tabular-nums text-muted-foreground">{current.done}/{current.total} goals</span>
+              </div>
+            )}
+            <Button size="xl" onClick={() => (current ? goChat(current.progressId) : router.push("/dashboard/explore"))}><MessageCircle />{current ? "Continue chat" : "Find a mission"}</Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* dummy: daily challenge has no scenario yet, see REPLACE.md */}

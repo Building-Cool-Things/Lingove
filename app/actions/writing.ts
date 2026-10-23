@@ -2,34 +2,13 @@
 
 import { headers } from "next/headers";
 
-import { jsonrepair } from "jsonrepair";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { chat, MODELS } from "@/lib/openrouter";
-import { UserProfile, type UserProfileDocument } from "@/lib/user-profile";
+import { chat, parseJson } from "@/lib/ai";
+import { UserProfile, type UserProfileDocument } from "@/models/user-profile";
 import { LEVEL_LABELS, WORD_LIMITS, WRITING_XP } from "@/lib/skill-config";
 import { WritingModel, type Writing, type WritingCorrection } from "@/models/writing";
 import { VocabularyModel } from "@/models/vocab";
-
-// ── Robust JSON parser for LLM output ────────────────────────────────────────
-function repairParseJson(raw: string): unknown {
-  let s = raw
-    .replace(/^```(?:json)?[\r\n]*/im, "")
-    .replace(/[\r\n]*```\s*$/m, "")
-    .trim();
-
-  const a = s.indexOf("{");
-  const b = s.lastIndexOf("}");
-  if (a >= 0 && b > a) s = s.slice(a, b + 1);
-
-  try { return JSON.parse(s); } catch { /* fall through */ }
-
-  try {
-    return JSON.parse(jsonrepair(s));
-  } catch (e) {
-    throw new Error(`JSON repair failed: ${(e as Error).message}\n\nRaw snippet: ${s.slice(0, 300)}`);
-  }
-}
 
 async function getCurrentUser() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -221,10 +200,10 @@ Return ONLY this JSON (all fields required):
 }`,
       },
     ],
-    { model: MODELS.default, temperature: 0.8, maxTokens: 600 },
+    { temperature: 0.8, maxTokens: 600 },
   );
 
-  const parsed = repairParseJson(reply) as Omit<WritingQuestion, "topic" | "difficulty" | "level" | "targetWords">;
+  const parsed = parseJson(reply) as Omit<WritingQuestion, "topic" | "difficulty" | "level" | "targetWords">;
 
   await UserProfile.findOneAndUpdate(
     { authUserId: user.id },
@@ -384,10 +363,10 @@ Return ONLY this JSON:
 }`,
       },
     ],
-    { model: MODELS.default, temperature: 0.8 },
+    { temperature: 0.8 },
   );
 
-  return repairParseJson(reply) as AnalysisResult;
+  return parseJson(reply) as AnalysisResult;
 };
 
 

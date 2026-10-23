@@ -62,10 +62,10 @@ The Lingov screens are a 1:1 port of the design prototype `Lingov Onboarding.dc.
 | # | Dummy | Where | Replace with |
 |---|---|---|---|
 | 1 | Minutes practised today, fixed at `8` (ring, Today card, "N more minutes…") | `store.tsx` `makeMe()` (`today: 8`) | Store practice minutes per day on `UserProfile` (or a sessions collection) and fill `today` in `lib/lingov-data.ts` → `LingovProfile` |
-| 2 | Chat list, conversations, canned AI replies, Hindi translations, tips | `data.ts` `CH`, `CONV0`, `REPLIES`, `HINTS`; reply logic in `store.tsx` `push()` | Load chats from `models/message.ts` + `models/user-scenario-progress.ts`. In `push()`, swap the 1300ms canned reply for a server action that calls `lib/openrouter.ts` with the scenario persona and returns `{ text, hi, tip }`. Translate into `profile.nativeLanguage` rather than always Hindi |
-| 3 | Voice messages are simulated (timer and waveform, no microphone; the transcript is a hint sentence) | `store.tsx` `startRec` / `sendVoice` | `navigator.mediaDevices.getUserMedia` + `MediaRecorder`, upload, speech-to-text, then `push(transcript, { voice: seconds })` |
-| 4 | Scenarios, personas, featured card | `data.ts` `SC`, `CH` (persona rows), `PERSONA_TOPICS` | `models/scenario.ts`. "Start mission" always opens chat 0, as in the prototype (`explore.tsx`); point it at the chosen scenario's chat once chats are real |
-| 5 | Home "Continue" card ("Order dinner for two", 2/4 goals) | `home.tsx` (comment `dummy: last chat preview`) | Most recent chat from #2 |
+| 2 | ~~Chat list, conversations, replies, tips~~: **now real**, see `decision.md` | — | — |
+| 3 | Voice messages are simulated (timer and waveform, no microphone; the transcript is a hint sentence) | removed from the chat (it sent a fixed sentence to the AI) | `navigator.mediaDevices.getUserMedia` + `MediaRecorder`, upload, speech-to-text, then `push(transcript, { voice: seconds })` |
+| 4 | ~~Scenarios, personas~~: scenarios are **now real** (seed with `pnpm seed`, see `decision.md`). Free-talk personas and the Featured card were removed | — | — |
+| 5 | ~~Home Continue card~~: **now real** (latest unfinished chat) | — | — |
 | 6 | Daily challenge ("Return a dish to the kitchen", arrow does nothing) | `home.tsx` | Add a daily scenario and open its sheet / chat |
 | 7 | Recommended cards and weak spots | `data.ts` `RECS`, `WEAK` | Recommendations from `models/scenario.ts` matched to interests; weak spots from `models/grammar-topic.ts` / `models/user-learning.ts` |
 | 8 | "12 words to review" (Home), "My words" states (New / Learning / Review / Mastered) | `home.tsx`, `data.ts` `WORDS` | `models/user-vocab.ts` (per-user word state). Again / Good both move to the next card, as in the prototype; add spaced repetition there |

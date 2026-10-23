@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 import { pageCol } from "./app-shell";
 import { useLingov } from "./store";
-import { card, h2 } from "./ui";
+import { Pic, card, h2 } from "./ui";
 
 export function Profile() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export function Profile() {
   return (
     <div className={cn(pageCol, "flex flex-col content-start gap-5")}>
       <div className="flex flex-none items-center gap-4">
-        <div className="flex size-[72px] flex-none items-center justify-center rounded-full bg-[#ffb38f] text-[28px] font-semibold text-[#2a1206]">{me.initial}</div>
+        <div className="flex size-[72px] flex-none items-center justify-center rounded-full bg-[#ffb38f] text-[28px] font-semibold text-[#2a1206]"><Pic image={me.image} initial={me.initial} /></div>
         <div className="flex flex-1 flex-col gap-2">
           <div className="flex flex-col">
             <span className="text-[22px] font-semibold tracking-[-.02em]">{me.name}</span>

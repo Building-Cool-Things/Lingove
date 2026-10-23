@@ -33,3 +33,10 @@ export function BrandMark({ size = 32, word = true }: { size?: 32 | 40 | 56; wor
     </div>
   );
 }
+
+// Profile picture: a photo URL (Google) or an emoji, falling back to the name's first letter.
+export function Pic({ image, initial }: { image: string; initial: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  if (image.startsWith("http")) return <img src={image} alt="" referrerPolicy="no-referrer" className="size-full rounded-full object-cover" />;
+  return <>{image || initial}</>;
+}

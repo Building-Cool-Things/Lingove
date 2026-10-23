@@ -9,36 +9,35 @@ import { cn } from "@/lib/utils";
 
 import { BrandMark, btnPress, btnPrimary, input } from "./ui";
 
-const S_COL = ["#141b2b", "#ea7a4f", "#ffb38f", "#4cc283", "#4cc283"];
 const field = `h-[46px] px-[14px] text-[15px] ${input}`;
 
 export function AuthScreen() {
   const router = useRouter();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const isSignup = mode === "signup";
 
-  const sc = (pw.length >= 8 ? 1 : 0) + (/[A-Z]/.test(pw) && /[a-z]/.test(pw) ? 1 : 0) + (/\d/.test(pw) ? 1 : 0) + (/[^A-Za-z0-9]/.test(pw) ? 1 : 0);
-
+  // One form for everyone: try to sign in, and if there is no such account, create it.
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
     setBusy(true);
     setErr("");
-    const res = isSignup
-      ? await signUp.email({ name: name.trim() || email.split("@")[0], email: email.trim(), password: pw })
-      : await signIn.email({ email: email.trim(), password: pw });
-    if (res.error) {
-      setErr(res.error.message || "Something went wrong. Try again.");
+    const em = email.trim();
+    let error = (await signIn.email({ email: em, password: pw })).error;
+    if (error) {
+      error = (await signUp.email({ name: em.split("@")[0], email: em, password: pw })).error;
+      // Email is taken, so the account exists and the password was simply wrong.
+      if (error?.code?.startsWith("USER_ALREADY_EXISTS")) error = { ...error, message: "Wrong password. Try again." };
+    }
+    if (error) {
+      setErr(error.message || "Something went wrong. Try again.");
       setBusy(false);
       return;
     }
-    // Sign up → onboarding step 1; sign in → home (dashboard layout sends un-onboarded users to /onboarding).
-    router.push(isSignup ? "/onboarding" : "/dashboard");
+    // "/" sends new users to onboarding and returning users to the dashboard.
+    router.push("/");
   }
 
   return (
@@ -68,9 +67,9 @@ export function AuthScreen() {
         <form onSubmit={submit} className="my-auto flex w-full flex-col gap-[22px] dk:max-w-[400px]">
           <div className="mt-2"><BrandMark size={32} /></div>
           <div className="mt-[10px] flex flex-col gap-[10px]">
-            <h1 className="m-0 text-[34px] font-semibold leading-[1.1] tracking-[-.03em]">{isSignup ? "Create your account" : "Learn English by talking."}</h1>
+            <h1 className="m-0 text-[34px] font-semibold leading-[1.1] tracking-[-.03em]">Learn English by talking.</h1>
             <p className="m-0 text-[15.5px] leading-[1.55] text-[#94a3c0] [text-wrap:pretty]">
-              {isSignup ? "Free to start. Missions, corrections and vocabulary in your own language." : "Short real-life chats with an AI. Gentle corrections. Progress you can see."}
+              Short real-life chats with an AI. Gentle corrections. Progress you can see.
             </p>
           </div>
 
@@ -85,19 +84,6 @@ export function AuthScreen() {
             </div>
           </div>
 
-          <div className="flex flex-none rounded-[10px] bg-[#0f1522] p-[3px]">
-            {([["signin", "Sign in"], ["signup", "Create account"]] as const).map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => { setMode(k); setErr(""); }}
-                className={cn("h-9 flex-1 cursor-pointer rounded-[8px] border-0 text-[13.5px] font-medium transition-all duration-[.14s]", mode === k ? "bg-[#090d15] text-[#eaeef7]" : "bg-transparent text-[#94a3c0]")}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
           <button
             type="button"
             onClick={() => signIn.social({ provider: "google", callbackURL: "/dashboard" })}
@@ -110,12 +96,6 @@ export function AuthScreen() {
           </div>
 
           <div className="flex flex-none flex-col gap-[14px]">
-            {isSignup && (
-              <div className="flex flex-col gap-[7px]">
-                <label htmlFor="lg-name" className="text-[13.5px] font-medium">Name</label>
-                <input id="lg-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ashfaq" autoComplete="name" className={field} />
-              </div>
-            )}
             <div className="flex flex-col gap-[7px]">
               <label htmlFor="lg-email" className="text-[13.5px] font-medium">Email</label>
               <input id="lg-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" className={field} />
@@ -124,25 +104,16 @@ export function AuthScreen() {
               <div className="flex items-baseline justify-between">
                 <label htmlFor="lg-pw" className="text-[13.5px] font-medium">Password</label>
                 {/* dummy: no reset-password flow yet, see REPLACE.md */}
-                {!isSignup && <a href="#" className="lg-a text-[12.5px]">Forgot password?</a>}
+                <a href="#" className="lg-a text-[12.5px]">Forgot password?</a>
               </div>
-              <input id="lg-pw" type="password" required value={pw} onChange={(e) => setPw(e.target.value)} placeholder="At least 8 characters" autoComplete={isSignup ? "new-password" : "current-password"} className={field} />
-              {isSignup && (
-                <div className="flex items-center gap-[10px]">
-                  <div className="flex flex-1 gap-1">
-                    {[0, 1, 2, 3].map((i) => (
-                      <span key={i} className="h-1 flex-1 rounded-full transition-[background] duration-200" style={{ background: i < sc ? S_COL[sc] : "#141b2b" }} />
-                    ))}
-                  </div>
-                  <span className="min-w-[44px] text-right text-[12px] font-medium text-[#94a3c0]">{pw ? ["Weak", "Weak", "Fair", "Good", "Strong"][sc] : ""}</span>
-                </div>
-              )}
+              <input id="lg-pw" type="password" required value={pw} onChange={(e) => setPw(e.target.value)} placeholder="At least 8 characters" autoComplete="current-password" className={field} />
             </div>
           </div>
 
           <button type="submit" disabled={busy} className={cn("h-12 flex-none rounded-[12px] text-[15px]", btnPrimary, btnPress, busy && "cursor-not-allowed opacity-45")}>
-            {isSignup ? "Create account" : "Sign in"}<ArrowRight size={15} />
+            Continue<ArrowRight size={15} />
           </button>
+          <p className="m-0 -mt-3 flex-none text-center text-[12.5px] leading-[1.5] text-[#94a3c0]">We will check if your account exists. If not, we will help you create one.</p>
           {err && <p className="m-0 -mt-3 text-center text-[12.5px] text-[#ea7a4f]">{err}</p>}
           {/* dummy: Terms / Privacy pages do not exist yet, see REPLACE.md */}
           <p className="m-0 flex-none text-center text-[12.5px] leading-[1.5] text-[#94a3c0]">

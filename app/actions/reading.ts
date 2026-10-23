@@ -2,34 +2,14 @@
 
 import { headers } from "next/headers";
 
-import { jsonrepair } from "jsonrepair";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { chat, MODELS } from "@/lib/openrouter";
-import { UserProfile, type UserProfileDocument } from "@/lib/user-profile";
+import { chat, parseJson } from "@/lib/ai";
+import { UserProfile, type UserProfileDocument } from "@/models/user-profile";
 import { LEVEL_LABELS, READING_XP, SESSION_QUESTIONS } from "@/lib/skill-config";
 import { ReadingModel, type Reading } from "@/models/reading";
 
 // ── JSON repair helper ────────────────────────────────────────────────────────
-function repairParseJson(raw: string): unknown {
-  let s = raw
-    .replace(/^```(?:json)?[\r\n]*/im, "")
-    .replace(/[\r\n]*```\s*$/m, "")
-    .trim();
-
-  const a = s.indexOf("{");
-  const b = s.lastIndexOf("}");
-  if (a >= 0 && b > a) s = s.slice(a, b + 1);
-
-  try { return JSON.parse(s); } catch { /* fall through */ }
-
-  try {
-    return JSON.parse(jsonrepair(s));
-  } catch (e) {
-    throw new Error(`JSON repair failed: ${(e as Error).message}\n\nRaw snippet: ${s.slice(0, 300)}`);
-  }
-}
-
 async function getCurrentUser() {
   const session = await auth.api.getSession({ headers: await headers() });
   return session?.user ?? null;
@@ -176,7 +156,7 @@ export async function generateReadingTask(opts: { objectiveOnly?: boolean } = {}
   const config = opts.objectiveOnly
     ? { ...PASSAGE_CONFIG[difficulty], questionCount: SESSION_QUESTIONS, questionTypes: "MCQ and TRUE_FALSE_NG only" }
     : PASSAGE_CONFIG[difficulty];
-  const native = profile?.nativeLanguage || "hi";
+  const native = profile?.nativeLanguage || "Hindi";
   const level = LEVEL_LABELS[difficulty];
 
   const reply = await chat(
@@ -241,7 +221,7 @@ Return ONLY this JSON:
     }
   ],
   "glossary": [
-    { "word": "one single word copied exactly as it appears in the passage", "ipa": "/IPA/", "meaning": "Simple English definition in one short sentence.", "native": "translation into the language with code ${native}", "partOfSpeech": "NOUN" | "VERB" | "ADJECTIVE" | "ADVERB" }
+    { "word": "one single word copied exactly as it appears in the passage", "ipa": "/IPA/", "meaning": "Simple English definition in one short sentence.", "native": "translation into ${native}", "partOfSpeech": "NOUN" | "VERB" | "ADJECTIVE" | "ADVERB" }
   ],
   "tips": [
     "Skim the passage first before answering",
@@ -251,10 +231,10 @@ Return ONLY this JSON:
 }`,
       },
     ],
-    { model: MODELS.default, temperature: 0.8, maxTokens: 2000 }
+    { temperature: 0.8, maxTokens: 2000 }
   );
 
-  const parsed = repairParseJson(reply) as {
+  const parsed = parseJson(reply) as {
     title: string;
     passageType: "ARTICLE" | "ACADEMIC" | "STORY" | "OPINION" | "NEWS";
     passage: string;
@@ -375,11 +355,11 @@ Return ONLY this JSON:
 Note: newVocabulary should contain 4-6 interesting or challenging words from the passage that learners should know.`,
       },
     ],
-    { model: MODELS.default, temperature: 0.5, maxTokens: 800 }
+    { temperature: 0.5, maxTokens: 800 }
   );
 
   try {
-    const parsed = repairParseJson(reply) as {
+    const parsed = parseJson(reply) as {
       shortAnswerResults: { questionIndex: number; isCorrect: boolean; feedback: string }[];
       generalFeedback: string;
       improvementPlan: string[];

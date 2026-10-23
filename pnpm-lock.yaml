@@ -8,9 +8,6 @@ dependencies:
   '@base-ui/react':
     specifier: ^1.6.0
     version: 1.6.0(@types/react@19.2.17)(react-dom@19.2.4)(react@19.2.4)
-  '@openrouter/sdk':
-    specifier: ^0.13.16
-    version: 0.13.16
   better-auth:
     specifier: ^1.6.20
     version: 1.6.20(next@16.2.9)(react-dom@19.2.4)(react@19.2.4)
@@ -1151,13 +1148,6 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
     dev: true
-
-  /@openrouter/sdk@0.13.16:
-    resolution: {integrity: sha512-lpWRju4bBuUyYD6ZNxmK8t5gWC9w3/LD9xVU4wdZTS0u+ZMu6uXO4RrSXnuEJLxicftRIJscLvHS+4tu+GN9rA==}
-    requiresBuild: true
-    dependencies:
-      zod: 4.4.3
-    dev: false
 
   /@opentelemetry/semantic-conventions@1.41.1:
     resolution: {integrity: sha512-/UhIkaZgPutTFmQ7RnIJGgDXZmtEJ7Dvi86xNTFWcnRxVRNk/aotsqDJYeEvDP+FSMB2SdW+pQzNMcWP0rwuNA==}

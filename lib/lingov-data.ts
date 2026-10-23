@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
-import { ensureUserProfile } from "@/lib/user-profile";
+import { ensureUserProfile } from "@/models/user-profile";
 
 export type LingovProfile = {
   hasOnboarded: boolean;
@@ -9,7 +9,6 @@ export type LingovProfile = {
   interests: string[];
   currentLevel: string;
   dailyTimeSpend: number;
-  correctionStyle: string;
   level: number;
   totalXP: number;
   xpForNextLevel: number;
@@ -28,7 +27,7 @@ export async function getLingovData() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return null;
 
-  const { id, name, email } = session.user;
+  const { id, name, email, image } = session.user;
   const p = await ensureUserProfile({ id, email, name });
   const last = p?.lastActivityAt ? new Date(p.lastActivityAt) : null;
 
@@ -38,7 +37,6 @@ export async function getLingovData() {
     interests: p?.interests ?? [],
     currentLevel: p?.currentLevel ?? "",
     dailyTimeSpend: p?.dailyTimeSpend ?? 10,
-    correctionStyle: p?.correctionStyle ?? "instant",
     level: p?.level ?? 1,
     totalXP: p?.totalXP ?? 0,
     xpForNextLevel: p?.xpForNextLevel ?? 100,
@@ -52,5 +50,5 @@ export async function getLingovData() {
     writingDifficulty: p?.writingDifficulty ?? "EASY",
   };
 
-  return { user: { name, email }, profile };
+  return { user: { name, email, image: image ?? "" }, profile };
 }

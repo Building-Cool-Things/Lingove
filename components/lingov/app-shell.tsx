@@ -7,16 +7,16 @@ import { SKILLS, TABS } from "@/lib/lingov/data";
 import { cn } from "@/lib/utils";
 
 import { useLingov } from "./store";
-import { BrandMark } from "./ui";
+import { BrandMark, Pic } from "./ui";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const path = usePathname();
-  const { S, me, openReading, openWriting } = useLingov();
+  const { S, activeId, me, openReading, openWriting } = useLingov();
   const active = (href: string) => (href === "/dashboard" ? path === href : path.startsWith(href));
   const onPractice = path === "/dashboard/practice";
   // Mobile: an open chat is full screen (prototype showTabs = !dk && !open).
-  const hideTabs = path === "/dashboard/chats" && S.chat != null;
+  const hideTabs = path === "/dashboard/chats" && activeId != null;
 
   return (
     <div className="flex h-dvh flex-col bg-[#040608] dk:flex-row">
@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="flex items-center gap-[6px] text-[12px] text-[#94a3c0]"><Flame size={12} className="text-[#ffb38f]" />{me.streak} day streak</span>
           </div>
           <div className="flex items-center gap-[10px] p-2">
-            <span className="flex size-9 flex-none items-center justify-center rounded-full bg-[#ffb38f] text-[14px] font-semibold text-[#2a1206]">{me.initial}</span>
+            <span className="flex size-9 flex-none items-center justify-center rounded-full bg-[#ffb38f] text-[14px] font-semibold text-[#2a1206]"><Pic image={me.image} initial={me.initial} /></span>
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="text-[14px] font-semibold">{me.name}</span>
               <span className="truncate text-[12px] text-[#94a3c0]">Level {me.level} · {me.nativeName} to English</span>

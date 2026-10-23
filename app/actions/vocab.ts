@@ -4,11 +4,9 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { UserProfile } from "@/lib/user-profile";
-import { UserVocab } from "@/models/user-vocab";
+import { UserProfile } from "@/models/user-profile";
+import { addUserWord } from "@/lib/vocab-store";
 import { VocabularyModel, type Vocabulary } from "@/models/vocab";
-
-const POS = ["NOUN", "VERB", "ADJECTIVE", "ADVERB", "PRONOUN", "PREPOSITION", "CONJUNCTION", "INTERJECTION"] as const;
 
 // Reading session "Save word": adds the word to the user's list (and the shared word bank).
 export async function saveWord(w: { word: string; meaning: string; translation: string; pronunciation: string; partOfSpeech: string; example: string }) {
@@ -17,22 +15,7 @@ export async function saveWord(w: { word: string; meaning: string; translation: 
   await connectDB();
 
   const profile = await UserProfile.findOne({ authUserId: session.user.id }).lean();
-  const level = profile?.currentLevel ?? "A2";
-  const word = w.word.toLowerCase();
-  const pos = (POS as readonly string[]).includes(w.partOfSpeech?.toUpperCase()) ? w.partOfSpeech.toUpperCase() : "NOUN";
-
-  const res = await UserVocab.updateOne(
-    { userId: session.user.id, word },
-    { $setOnInsert: { userId: session.user.id, word, level, partOfSpeech: pos.toLowerCase(), meaning: w.meaning, translation: w.translation, example: w.example, pronunciation: w.pronunciation, source: "tapped" } },
-    { upsert: true },
-  );
-  if (res.upsertedCount) await UserProfile.updateOne({ authUserId: session.user.id }, { $inc: { totalVocabLearned: 1 } });
-
-  await VocabularyModel.updateOne(
-    { word },
-    { $setOnInsert: { word, level, difficulty: "MEDIUM", partOfSpeech: pos, meaning: w.meaning, pronunciation: w.pronunciation, examples: [w.example] } },
-    { upsert: true },
-  );
+  await addUserWord(session.user.id, profile?.currentLevel ?? "A2", w, "tapped");
   return { ok: true };
 }
 

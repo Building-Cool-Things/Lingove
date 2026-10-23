@@ -1,4 +1,4 @@
-import mongoose, { Schema, type Model } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 import { connectDB } from "@/lib/db";
 
@@ -12,7 +12,6 @@ export type UserProfileDocument = {
   nativeLanguage?: string;
   currentLevel?: string;
   dailyTimeSpend?: number;
-  correctionStyle?: "instant" | "end";
   notifyLanguages?: string[];
 
   // Writing progress
@@ -74,7 +73,6 @@ const userProfileSchema = new Schema<UserProfileDocument>(
     nativeLanguage: { type: String, default: "" },
     currentLevel: { type: String, enum: ["A1", "A2", "B1", "B2", "C1"], default: "A1" },
     dailyTimeSpend: { type: Number, default: 10 },
-    correctionStyle: { type: String, enum: ["instant", "end"] as const, default: "instant" },
     notifyLanguages: { type: [String], default: [] },
 
     writingDifficulty: { type: String, enum: ["EASY", "MEDIUM", "HARD"] as const, default: "EASY" },

@@ -1,15 +1,17 @@
 import { Schema, type InferSchemaType, type Types } from "mongoose";
 
-import { DIFFICULTIES, getModel, LEVELS } from "./_shared";
+import { getModel, LEVELS } from "./_shared";
 
 // Progress only, never a copy of the scenario.
 const incidentProgressSchema = new Schema(
   {
     incidentId: { type: String, required: true },
-    status: { type: String, enum: ["not_started", "in_progress", "completed"], default: "not_started" },
+    status: { type: String, enum: ["in_progress", "completed"], default: "in_progress" },
     milestonesDone: { type: [String], default: [] },
     mistakeCount: { type: Number, default: 0 },
     userMessageCount: { type: Number, default: 0 },
+    // Written once when the incident ends: { summary, wins, focus, mistakesByTopic, examples, words }
+    feedback: { type: Schema.Types.Mixed, default: null },
   },
   { _id: false }
 );
@@ -18,12 +20,12 @@ const userScenarioProgressSchema = new Schema(
   {
     userId: { type: String, required: true, index: true },
     scenarioId: { type: Schema.Types.ObjectId, ref: "Scenario", required: true },
-    currentIncidentId: String,
+    currentIncidentId: { type: String, required: true },
     incidents: { type: [incidentProgressSchema], default: [] },
-    difficulty: { type: String, enum: DIFFICULTIES, default: "medium" }, // moves after each incident
     cefrLevel: { type: String, enum: LEVELS, required: true }, // level characters speak at
-    hiddenState: { type: Schema.Types.Mixed, default: {} }, // trust, flags (never send to client)
-    memorySummary: { type: String, default: "" }, // recap of finished incidents for the LLM
+    // Character moods the AI keeps up to date: { moods: { tobias: { mood: "irritated", trust: 3 } } }. Never sent to the browser.
+    hiddenState: { type: Schema.Types.Mixed, default: {} },
+    memorySummary: { type: String, default: "" }, // recap of finished incidents for the AI
   },
   { timestamps: true }
 );
