@@ -48,23 +48,23 @@ export function useChatState() {
     }
   }, [loadChats]);
 
-  const openChat = useCallback((progressId: string) => {
-    setActiveId(progressId);
+  const openChat = useCallback((chatId: string) => {
+    setActiveId(chatId);
     setThread(null);
     setError("");
-    getThread(progressId).then(setThread, (e) => setError(errorText(e)));
+    getThread(chatId).then(setThread, (e) => setError(errorText(e)));
   }, []);
   const closeChat = useCallback(() => { setActiveId(null); setThread(null); setError(""); }, []);
-  const goChat = useCallback((progressId: string) => { openChat(progressId); router.push("/dashboard/chats"); }, [openChat, router]);
+  const goChat = useCallback((chatId: string) => { openChat(chatId); router.push("/dashboard/chats"); }, [openChat, router]);
 
   const startMission = useCallback(async (scenarioId: string) => {
     setStarting(scenarioId);
     setError("");
     try {
-      const progressId = await startScenario(scenarioId);
+      const chatId = await startScenario(scenarioId);
       void loadChats();
       void loadScenarios();
-      goChat(progressId);
+      goChat(chatId);
       return true;
     } catch (e) {
       setError(errorText(e));
@@ -81,13 +81,13 @@ export function useChatState() {
     const mine: MessageView = { id: "pending", senderType: "user", senderId: "me", senderName: "You", text, at: new Date().toISOString(), mistakes: [] };
     const restore = thread;
     return run(
-      () => sendMessage(thread.progressId, text),
+      () => sendMessage(thread.chatId, text),
       () => setThread({ ...thread, messages: [...thread.messages, mine] }),
     ).then((ok) => { if (!ok) setThread(restore); return ok; });
   }, [thread, run]);
 
-  const ask = useCallback((question: string) => (thread ? run(() => askGuide(thread.progressId, question)) : Promise.resolve(false)), [thread, run]);
-  const nextMission = useCallback(() => (thread ? run(() => nextIncident(thread.progressId)) : Promise.resolve(false)), [thread, run]);
+  const ask = useCallback((question: string) => (thread ? run(() => askGuide(thread.chatId, question)) : Promise.resolve(false)), [thread, run]);
+  const nextMission = useCallback(() => (thread ? run(() => nextIncident(thread.chatId)) : Promise.resolve(false)), [thread, run]);
 
   // Translations are saved on the server, so each message is translated once.
   const translate = useCallback(async (messageId: string) => {

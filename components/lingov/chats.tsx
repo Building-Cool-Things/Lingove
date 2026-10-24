@@ -58,7 +58,7 @@ export function Chats() {
     if (el && el.scrollHeight !== lastH.current) { lastH.current = el.scrollHeight; el.scrollTop = el.scrollHeight; }
   });
 
-  const rows = (chats ?? []).filter((c) => (S.cf === "All" || (S.cf === "Completed") === c.completed) && (!q || (c.scenarioTitle + " " + c.incidentTitle).toLowerCase().includes(q)));
+  const rows = (chats ?? []).filter((c) => (S.cf === "All" || (S.cf === "Completed") === c.completed) && (!q || (c.title + " " + c.incidentTitle).toLowerCase().includes(q)));
   const nextGoal = thread?.milestones.find((m) => !m.done);
   const doneCount = thread?.milestones.filter((m) => m.done).length ?? 0;
   const tipCount = thread?.messages.reduce((n, m) => n + m.mistakes.length, 0) ?? 0;
@@ -101,16 +101,16 @@ export function Chats() {
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
           {rows.map((c) => (
-            <div key={c.progressId} onClick={() => openChat(c.progressId)} className={`flex flex-none cursor-pointer items-center gap-3 px-5 py-2.5 transition-colors hover:bg-card ${activeId === c.progressId ? "dk:bg-card" : ""}`}>
+            <div key={c.chatId} onClick={() => openChat(c.chatId)} className={`flex flex-none cursor-pointer items-center gap-3 px-5 py-2.5 transition-colors hover:bg-card ${activeId === c.chatId ? "dk:bg-card" : ""}`}>
               <Avatar size="xl"><AvatarFallback><MessageCircle size={21} /></AvatarFallback></Avatar>
               <div className="-mb-2.5 flex min-w-0 flex-1 flex-col gap-[3px] border-b border-border pb-2.5 pt-0.5">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-[15.5px] font-semibold">{c.scenarioTitle}</span>
+                  <span className="truncate text-[15.5px] font-semibold">{c.title}</span>
                   <span className="flex-none text-[12px] text-muted-foreground">{when(c.lastAt)}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-[13.5px] text-muted-foreground">{c.lastText || c.incidentTitle}</span>
-                  <Badge variant={c.completed ? "secondary" : "warm"} className="tabular-nums">{c.completed ? "Done" : c.done + "/" + c.total}</Badge>
+                  {c.total > 0 && <Badge variant={c.completed ? "secondary" : "warm"} className="tabular-nums">{c.completed ? "Done" : c.done + "/" + c.total}</Badge>}
                 </div>
               </div>
             </div>
@@ -319,8 +319,6 @@ function FeedbackCard({ fb, thread, waiting, onNext, onLeave, onPractice }: { fb
           <span className="text-[14.5px] leading-normal">{fb.summary}</span>
           <span className="text-[12.5px] text-muted-foreground">{fb.messages} messages · {fb.mistakes === 0 ? "no mistakes" : fb.mistakes + (fb.mistakes === 1 ? " mistake" : " mistakes")}</span>
         </div>
-        {fb.wins.length > 0 && <Bullets title="WENT WELL" items={fb.wins} className="text-[#7fe3a8]" />}
-        {fb.focus.length > 0 && <Bullets title="PRACTISE NEXT" items={fb.focus} className="text-accent" />}
         {fb.topics.length > 0 && (
           <div className="flex flex-col gap-2">
             <span className={caps}>GRAMMAR TO REVIEW</span>
@@ -333,12 +331,6 @@ function FeedbackCard({ fb, thread, waiting, onNext, onLeave, onPractice }: { fb
             {fb.examples.map((e, i) => <span key={i} className="text-[14px] leading-[1.4]"><span className="text-muted-foreground line-through decoration-accent">{e.wrong}</span> → <b className="text-[#7fe3a8]">{e.right}</b></span>)}
           </div>
         )}
-        {fb.words.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <span className={caps}>NEW WORDS SAVED</span>
-            <div className="flex flex-wrap gap-1.5">{fb.words.map((w) => <Badge key={w} variant="secondary">{w}</Badge>)}</div>
-          </div>
-        )}
         <div className="flex flex-col gap-2 border-t border-border pt-3">
           <span className="text-[13.5px] text-muted-foreground">{thread.guideName}: {thread.hasNext ? "Ready for the next scene, or shall we continue tomorrow?" : "That was the last scene of this story. Well done!"}</span>
           <div className="flex gap-2">
@@ -349,14 +341,5 @@ function FeedbackCard({ fb, thread, waiting, onNext, onLeave, onPractice }: { fb
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function Bullets({ title, items, className }: { title: string; items: string[]; className: string }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className={caps}>{title}</span>
-      {items.map((t) => <span key={t} className="flex gap-2 text-[14px] leading-[1.4]"><span className={className}>•</span>{t}</span>)}
-    </div>
   );
 }

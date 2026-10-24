@@ -63,7 +63,7 @@ export function Home() {
             <div className="flex items-center gap-3">
               <Avatar size="xl"><AvatarFallback><MessageCircle size={20} /></AvatarFallback></Avatar>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-[15.5px] font-semibold">{current ? current.scenarioTitle : "Start your first mission"}</span>
+                <span className="text-[15.5px] font-semibold">{current ? current.title : "Start your first mission"}</span>
                 <span className="truncate text-[13px] text-muted-foreground">{current ? current.lastText || current.incidentTitle : "Chat with characters in a real story and learn from your mistakes."}</span>
               </div>
             </div>
@@ -73,7 +73,7 @@ export function Home() {
                 <span className="text-[12px] font-medium tabular-nums text-muted-foreground">{current.done}/{current.total} goals</span>
               </div>
             )}
-            <Button size="xl" onClick={() => (current ? goChat(current.progressId) : router.push("/dashboard/explore"))}><MessageCircle />{current ? "Continue chat" : "Find a mission"}</Button>
+            <Button size="xl" onClick={() => (current ? goChat(current.chatId) : router.push("/dashboard/explore"))}><MessageCircle />{current ? "Continue chat" : "Find a mission"}</Button>
           </CardContent>
         </Card>
       </div>

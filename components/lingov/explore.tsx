@@ -54,7 +54,7 @@ export function Explore() {
                 <span className="line-clamp-3 text-[13px] leading-[1.4] text-muted-foreground">{s.sceneSetup}</span>
                 <div className="mt-auto flex items-center gap-2">
                   <Badge variant="secondary">{s.incidentCount} scenes</Badge>
-                  {s.progressId && <span className="text-[12px] text-muted-foreground">Started</span>}
+                  {s.chatId && <span className="text-[12px] text-muted-foreground">Started</span>}
                 </div>
               </CardContent>
             </Card>
@@ -84,9 +84,9 @@ export function Explore() {
               <Button
                 size="2xl"
                 disabled={starting === sc.id}
-                onClick={() => { if (sc.progressId) { set({ scen: null }); goChat(sc.progressId); } else void startMission(sc.id).then((ok) => { if (ok) set({ scen: null }); }); }}
+                onClick={() => { if (sc.chatId) { set({ scen: null }); goChat(sc.chatId); } else void startMission(sc.id).then((ok) => { if (ok) set({ scen: null }); }); }}
               >
-                {starting === sc.id ? "Preparing your mission…" : sc.progressId ? "Continue mission" : "Start mission"}<ArrowRight />
+                {starting === sc.id ? "Preparing your mission…" : sc.chatId ? "Continue mission" : "Start mission"}<ArrowRight />
               </Button>
             </>
           )}

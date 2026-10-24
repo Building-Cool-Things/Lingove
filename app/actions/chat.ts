@@ -1,52 +1,42 @@
 "use server";
 
-// Server actions behind the Chats screen. Reads top to bottom as the life of a mission:
-// list -> start -> open -> send messages -> scene ends (feedback) -> next scene.
+// Server actions behind the Chats screen. Reads top to bottom:
+// list -> start (copy a scenario into My Chats) -> open -> send messages -> scene ends -> next scene.
 // The AI calls live in lib/chat/engine.ts; this file only does login, database and bookkeeping.
+//
+// Data (models/learning-through-scenario):
+//   Chat              one row of the user's chat list
+//   ScenarioProgress  where the user is in a scenario
+//   IncidentProgress  goals and XP of one scene
+//   Conversation      the messages of one scene
 import { headers } from "next/headers";
 import { isValidObjectId, type Types } from "mongoose";
 
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import {
-  checkMessage,
-  guideAnswer,
-  storyTurn,
-  translateText,
-  writeFeedback,
-  type StoryTurn,
-  type Topic,
-} from "@/lib/chat/engine";
+import { checkMessage, guideAnswer, storyTurn, translateText, type StoryTurn, type Topic } from "@/lib/chat/engine";
 import type { StoryContext } from "@/lib/chat/prompts";
-import type {
-  ChatSummary,
-  FeedbackView,
-  MessageView,
-  Mistake,
-  Mood,
-  ScenarioCard,
-  ThreadView,
-  WordInfo,
-} from "@/lib/chat/types";
-import { UserProfile } from "@/models/user-profile";
-import { addUserWord } from "@/lib/vocab-store";
+import type { ChatSummary, FeedbackView, MessageView, Mistake, ScenarioCard, ThreadView } from "@/lib/chat/types";
 import { GrammarTopic } from "@/models/grammar-topic";
-import { Guide } from "@/models/guide";
-import { Message } from "@/models/message";
-import { Scenario, type IScenario } from "@/models/scenario";
 import {
-  UserScenarioProgress,
-  type IUserScenarioProgress,
-} from "@/models/user-scenario-progress";
-import { UserVocab } from "@/models/user-vocab";
+  Chat, Conversation, Guide, IncidentProgress, Scenario, ScenarioProgress,
+  type IChat, type IConversation, type IGuide, type IIncidentProgress, type IScenario, type IScenarioProgress,
+} from "@/models/learning-through-scenario";
+import { UserProfile } from "@/models/user-profile";
 import type { Level } from "@/models/_shared";
 
 const MAX_MESSAGES = 30; // a scene ends after this many learner messages, even if a goal is still open
 const HISTORY_LENGTH = 8; // recent messages sent to the AI
-const XP_ALL_GOALS = 50;
-const XP_PARTIAL = 20;
 
 type Incident = IScenario["incidents"][number];
+type User = Awaited<ReturnType<typeof requireUser>>;
+type StoredMessage = IConversation["messages"][number];
+type NewMessage = {
+  speaker: "user" | "character" | "guide";
+  characterId?: string;
+  text: string;
+  evaluation?: { errors: ReturnType<typeof toError>[] };
+};
 
 // ── Small helpers ────────────────────────────────────────────────────────────
 
@@ -54,14 +44,11 @@ async function requireUser() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthorized");
   await connectDB();
-  const profile = await UserProfile.findOne({
-    authUserId: session.user.id,
-  }).lean();
-  const nativeLanguage = profile?.nativeLanguage || "English";
+  const profile = await UserProfile.findOne({ authUserId: session.user.id }).lean();
   return {
     userId: session.user.id,
     level: (profile?.currentLevel ?? "A2") as Level,
-    nativeLanguage,
+    nativeLanguage: profile?.nativeLanguage || "English",
   };
 }
 
@@ -69,538 +56,326 @@ async function requireUser() {
 let topicCache: { at: number; topics: Topic[] } | null = null;
 async function getTopics(): Promise<Topic[]> {
   if (!topicCache || Date.now() - topicCache.at > 10 * 60_000) {
-    const topics = await GrammarTopic.find({}, "slug title")
-      .sort({ level: 1 })
-      .lean<Topic[]>();
-    topicCache = {
-      at: Date.now(),
-      topics: topics.map(({ slug, title }) => ({ slug, title })),
-    };
+    const topics = await GrammarTopic.find({}, "slug title").sort({ level: 1 }).lean<Topic[]>();
+    topicCache = { at: Date.now(), topics: topics.map(({ slug, title }) => ({ slug, title })) };
   }
   return topicCache.topics;
 }
 
-async function loadOwned(progressId: string, userId: string) {
-  if (!isValidObjectId(progressId)) throw new Error("Chat not found.");
-  const progress = await UserScenarioProgress.findOne({
-    _id: progressId,
-    userId,
-  }).lean<IUserScenarioProgress>();
-  const scenario =
-    progress &&
-    (await Scenario.findById(progress.scenarioId).lean<IScenario>());
-  if (!progress || !scenario) throw new Error("Chat not found.");
-  return { progress, scenario };
+const milestonesOf = (incident: Incident) => [...incident.milestones].sort((a, b) => a.order - b.order);
+const nameOf = (incident: Incident, characterId?: string | null) =>
+  incident.characterParticipants.find((c) => c.id === characterId)?.name ?? "Guide";
+
+// A mistake found by the AI, in the shape Conversation stores it. `code` holds the grammar topic slug.
+const toError = (m: Mistake) => ({
+  category: m.category,
+  code: m.topicSlugs[0],
+  original: m.wrong,
+  correction: m.right,
+  explanation: m.why,
+  explanationNative: m.whyNative,
+});
+
+// One AI turn as messages: the character replies, then the guide's note.
+const turnMessages = (turn: StoryTurn, guideId: string): NewMessage[] => [
+  ...turn.replies.map((r) => ({ speaker: "character" as const, characterId: r.characterId, text: r.text })),
+  ...(turn.guide ? [{ speaker: "guide" as const, characterId: guideId, text: turn.guide }] : []),
+];
+
+// What the chat list shows under the title: the last thing a character said.
+function lastLine(incident: Incident, turn: StoryTurn) {
+  const last = turn.replies.at(-1)!;
+  return `${nameOf(incident, last.characterId)}: ${last.text}`;
 }
-
-const currentIncident = (p: IUserScenarioProgress, s: IScenario) => {
-  const incident = s.incidents.find((i) => i.id === p.currentIncidentId);
-  if (!incident) throw new Error("Scene not found.");
-  return incident;
-};
-const moodsOf = (p: Pick<IUserScenarioProgress, "hiddenState">) =>
-  ((p.hiddenState as { moods?: Record<string, Mood> } | null)?.moods ??
-    {}) as Record<string, Mood>;
-
-const nameOf = (s: IScenario, id: string) =>
-  s.characters.find((c) => c.id === id)?.name ?? "Guide";
 
 // Everything the AI needs to know about the scene, built from what is stored.
-async function storyContext(
-  p: {
-    cefrLevel: string;
-    memorySummary: string;
-    hiddenState: unknown;
-    incidentCount: number;
-    done: string[];
-    progressId?: Types.ObjectId;
-  },
-  s: IScenario,
-  incident: Incident,
-  guideName: string,
-): Promise<StoryContext> {
-  const recent = p.progressId
-    ? await Message.find({
-        progressId: p.progressId,
-        incidentId: incident.id,
-        channel: "group",
-      })
-        .sort({ createdAt: -1, _id: -1 })
-        .limit(HISTORY_LENGTH)
-        .lean()
-    : [];
+function storyContext(level: string, scenario: IScenario, incident: Incident, guide: IGuide, messages: StoredMessage[], done: string[]): StoryContext {
+  const spoken = messages.filter((m) => m.speaker !== "guide");
   return {
-    scenario: { title: s.title, sceneSetup: s.sceneSetup },
+    scenario: { title: scenario.title, sceneSetup: scenario.sceneSetup.join(" ") },
     incident: {
       title: incident.title,
-      scenario: incident.scenario,
-      userRole: incident.userRole,
-      milestones: incident.milestones,
+      setup: incident.scenarioSetup.join(" "),
+      worldFacts: incident.worldFacts,
+      userRole: [incident.userRole?.name, incident.userRole?.description].filter(Boolean).join(". "),
+      milestones: milestonesOf(incident).map(({ id, goal }) => ({ id, goal })),
     },
-    characters: s.characters
-      .filter((c) => incident.characterParticipants.includes(c.id))
-      .map((c) => ({
-        id: c.id,
-        name: c.name,
-        role: c.role,
-        persona: c.persona,
-        secret: c.secret ?? null,
-      })),
-    openingFrom: incident.openingFrom,
-    guideName,
-    level: p.cefrLevel,
-    memory: p.memorySummary,
-    moods: moodsOf({ hiddenState: p.hiddenState } as IUserScenarioProgress),
-    done: p.done,
-    history: recent
-      .reverse()
-      .map((m) => ({
-        name: m.senderType === "user" ? "Learner" : nameOf(s, m.senderId),
-        text: m.text,
-      })),
-    userMessageCount: p.incidentCount,
+    characters: incident.characterParticipants.map((c) => ({
+      id: c.id,
+      name: c.name,
+      role: c.role,
+      persona: c.persona,
+      secret: c.secrets.join(" ") || null,
+    })),
+    guide: { name: guide.name, persona: incident.guidePersona },
+    level,
+    done,
+    history: spoken.slice(-HISTORY_LENGTH).map((m) => ({ name: m.speaker === "user" ? "Learner" : nameOf(incident, m.characterId), text: m.text })),
+    userMessageCount: messages.filter((m) => m.speaker === "user").length,
   };
 }
 
-async function guideOf(incident: Incident) {
-  const guide = await Guide.findById(incident.userGuideId).lean();
-  if (!guide) throw new Error("Guide not found.");
-  return { id: String(guide._id), name: guide.name };
-}
+// Loads everything about the scene a chat is currently on. Also checks the chat belongs to the user.
+async function loadChat(chatId: string, userId: string) {
+  if (!isValidObjectId(chatId)) throw new Error("Chat not found.");
+  const chat = await Chat.findOne({ _id: chatId, userId }).lean<IChat>();
+  if (!chat) throw new Error("Chat not found.");
+  if (chat.type !== "scenario" || !chat.scenarioId) throw new Error("This chat cannot be opened yet.");
 
-// Saves one AI turn: character replies, the guide's note, new moods and new words.
-async function saveTurn(
-  progressId: Types.ObjectId,
-  scenarioId: Types.ObjectId,
-  incident: Incident,
-  guide: { id: string; name: string },
-  turn: StoryTurn,
-  user: { userId: string; level: string },
-) {
-  const base = { progressId, incidentId: incident.id };
-  await Message.insertMany([
-    ...turn.replies.map((r) => ({
-      ...base,
-      channel: "group",
-      senderType: "character",
-      senderId: r.characterId,
-      text: r.text,
-    })),
-    ...(turn.guide
-      ? [
-          {
-            ...base,
-            channel: "guide",
-            senderType: "guide",
-            senderId: guide.id,
-            text: turn.guide,
-          },
-        ]
-      : []),
+  const scenario = await Scenario.findById(chat.scenarioId).lean<IScenario>();
+  const progress = await ScenarioProgress.findOne({ userId, scenarioId: chat.scenarioId }).lean<IScenarioProgress>();
+  const incident = scenario?.incidents.find((i) => i.id === progress?.currentIncidentId);
+  if (!scenario || !progress || !incident) throw new Error("Chat not found.");
+
+  const incidentProgress = await IncidentProgress.findOne({ userId, scenarioId: scenario._id, incidentId: incident.id }).lean<IIncidentProgress>();
+  const [conversation, guide] = await Promise.all([
+    incidentProgress?.conversationId && Conversation.findById(incidentProgress.conversationId).lean<IConversation>(),
+    Guide.findById(incident.guideId).lean<IGuide>(),
   ]);
-  await saveWords(user, turn.vocab, "incident", scenarioId, incident.id);
+  if (!incidentProgress || !conversation || !guide) throw new Error("Chat not found.");
+  return { chat, scenario, progress, incident, incidentProgress, conversation, guide };
 }
 
-async function saveWords(
-  user: { userId: string; level: string },
-  words: WordInfo[],
-  source: "incident" | "mistake",
-  scenarioId: Types.ObjectId,
-  incidentId: string,
-) {
-  for (const w of words)
-    await addUserWord(user.userId, user.level, w, source, {
-      scenarioId,
-      incidentId,
-    });
+// Starts a scene: the AI writes the opening, then the conversation and the scene progress are created.
+// Returns the line the chat list should show.
+async function beginIncident(user: User, scenario: IScenario, incident: Incident) {
+  const guide = await Guide.findById(incident.guideId).lean<IGuide>();
+  if (!guide) throw new Error("Guide not found.");
+
+  // Ask the AI first, so a failed call leaves nothing half-created.
+  const turn = await storyTurn(storyContext(user.level, scenario, incident, guide, [], []), null);
+  const conversation = await Conversation.create({
+    userId: user.userId,
+    scenarioId: scenario._id,
+    incidentId: incident.id,
+    messages: turnMessages(turn, String(guide._id)),
+  });
+  await IncidentProgress.create({
+    userId: user.userId,
+    scenarioId: scenario._id,
+    incidentId: incident.id,
+    status: "in_progress",
+    currentMilestoneId: milestonesOf(incident)[0]?.id,
+    conversationId: conversation._id,
+    startedAt: new Date(),
+  });
+  return lastLine(incident, turn);
 }
 
-// ── Views sent to the browser (never include secrets or hidden state) ────────
+const touchChat = (chatId: Types.ObjectId, lastMessage: string) =>
+  Chat.updateOne({ _id: chatId }, { lastMessage, lastMessageAt: new Date() });
 
-function toMessageView(
-  titles: Map<string, string>,
-  m: {
-    _id: Types.ObjectId;
-    senderType: string;
-    senderId: string;
-    text: string;
-    createdAt: Date;
-    mistakes?: {
-      wrong: string;
-      right: string;
-      why: string;
-      whyNative?: string | null;
-      topicSlugs: string[];
-      category: string;
-    }[];
-    translation?: string | null;
-  },
-  s: IScenario,
-): MessageView {
+// ── Views sent to the browser (never include secrets) ────────────────────────
+
+function toMessageView(titles: Map<string, string>, m: StoredMessage, incident: Incident): MessageView {
   return {
     id: String(m._id),
-    senderType: m.senderType as MessageView["senderType"],
-    senderId: m.senderId,
-    senderName: m.senderType === "user" ? "You" : nameOf(s, m.senderId),
+    senderType: m.speaker,
+    senderId: m.characterId ?? "me",
+    senderName: m.speaker === "user" ? "You" : nameOf(incident, m.characterId),
     text: m.text,
     at: m.createdAt.toISOString(),
-    mistakes: (m.mistakes ?? []).map(
-      ({ wrong, right, why, whyNative, topicSlugs, category }) => ({
-        wrong,
-        right,
-        why,
-        whyNative: whyNative ?? undefined,
-        topicSlugs,
-        category: category as Mistake["category"],
-        topicTitles: topicSlugs.map((slug) => titles.get(slug) ?? slug),
-      }),
-    ),
-    translation: m.translation ?? undefined,
+    mistakes: (m.evaluation?.errors ?? []).map((e) => ({
+      wrong: e.original ?? "",
+      right: e.correction ?? "",
+      why: e.explanation ?? "",
+      whyNative: e.explanationNative ?? undefined,
+      topicSlugs: e.code ? [e.code] : [],
+      category: e.category as Mistake["category"],
+      topicTitles: e.code ? [titles.get(e.code) ?? e.code] : [],
+    })),
   };
 }
 
-async function buildThread(
-  progressId: string,
-  userId: string,
-): Promise<ThreadView> {
-  const { progress, scenario } = await loadOwned(progressId, userId);
-  const incident = currentIncident(progress, scenario);
-  const ip = progress.incidents.find((i) => i.incidentId === incident.id);
-  const where = { progressId: progress._id, incidentId: incident.id };
-  const [guide, topics, messages, note] = await Promise.all([
-    guideOf(incident),
-    getTopics(),
-    Message.find({ ...where, channel: "group" })
-      .sort({ createdAt: 1, _id: 1 })
-      .lean(),
-    Message.findOne({ ...where, channel: "guide", senderType: "guide" })
-      .sort({ createdAt: -1, _id: -1 })
-      .lean(),
-  ]);
-  const index = scenario.incidents.findIndex((i) => i.id === incident.id);
-  const titles = new Map(topics.map((t) => [t.slug, t.title]));
+// End-of-scene summary. Plain counting, no AI: which grammar topics came up most.
+function buildFeedback(messages: StoredMessage[], titles: Map<string, string>, allGoalsDone: boolean): FeedbackView {
+  const mine = messages.filter((m) => m.speaker === "user");
+  const errors = mine.flatMap((m) => m.evaluation?.errors ?? []);
+
+  const counts = new Map<string, number>();
+  for (const e of errors) if (e.code) counts.set(e.code, (counts.get(e.code) ?? 0) + 1);
 
   return {
-    progressId: String(progress._id),
+    summary: allGoalsDone ? "You reached every goal in this scene. Well done!" : "The scene ended before every goal was reached. Try the next one!",
+    messages: mine.length,
+    mistakes: errors.length,
+    topics: [...counts].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([slug, count]) => ({ slug, title: titles.get(slug) ?? slug, count })),
+    examples: errors.slice(0, 3).map((e) => ({ wrong: e.original ?? "", right: e.correction ?? "", why: e.explanation ?? "" })),
+    allGoalsDone,
+  };
+}
+
+async function buildThread(chatId: string, userId: string): Promise<ThreadView> {
+  const { scenario, incident, incidentProgress: ip, conversation, guide } = await loadChat(chatId, userId);
+  const titles = new Map((await getTopics()).map((t) => [t.slug, t.title]));
+  const index = scenario.incidents.findIndex((i) => i.id === incident.id);
+  const completed = ip.status === "completed";
+  const lastGuideMessage = conversation.messages.findLast((m) => m.speaker === "guide");
+
+  return {
+    chatId,
     scenarioTitle: scenario.title,
     incidentTitle: incident.title,
     incidentNumber: index + 1,
     incidentCount: scenario.incidents.length,
-    status: ip?.status ?? "in_progress",
-    milestones: incident.milestones.map((m) => ({
-      id: m.id,
-      goal: m.goal,
-      done: ip?.milestonesDone.includes(m.id) ?? false,
-    })),
-    characters: scenario.characters
-      .filter((c) => incident.characterParticipants.includes(c.id))
-      .map(({ id, name, role }) => ({ id, name, role })),
+    status: completed ? "completed" : "in_progress",
+    milestones: milestonesOf(incident).map((m) => ({ id: m.id, goal: m.goal, done: ip.completedMilestoneIds.includes(m.id) })),
+    characters: incident.characterParticipants.map(({ id, name, role }) => ({ id, name, role })),
     guideName: guide.name,
-    guideNote: note?.text ?? "",
-    messages: messages.map((m) => toMessageView(titles, m, scenario)),
-    feedback: (ip?.feedback as FeedbackView | null) ?? null,
+    guideNote: lastGuideMessage?.text ?? "",
+    messages: conversation.messages.filter((m) => m.speaker !== "guide").map((m) => toMessageView(titles, m, incident)),
+    feedback: completed ? buildFeedback(conversation.messages, titles, ip.completedMilestoneIds.length === incident.milestones.length) : null,
     hasNext: index < scenario.incidents.length - 1,
   };
 }
 
 // ── Lists ────────────────────────────────────────────────────────────────────
 
+// Explore: every published scenario, with the chat the user already made from it (if any).
 export async function listScenarios(): Promise<ScenarioCard[]> {
   const { userId } = await requireUser();
-  const [scenarios, mine] = await Promise.all([
-    Scenario.find({ published: true })
-      .sort({ createdAt: 1 })
-      .lean<IScenario[]>(),
-    UserScenarioProgress.find({ userId }, "scenarioId").lean<
-      { _id: Types.ObjectId; scenarioId: Types.ObjectId }[]
-    >(),
+  const [scenarios, myChats] = await Promise.all([
+    Scenario.find({ isPublished: true }).sort({ createdAt: 1 }).lean<IScenario[]>(),
+    Chat.find({ userId, scenarioId: { $exists: true } }, "scenarioId").lean<IChat[]>(),
   ]);
-  console.log("Scenarios:", scenarios, "Mine:", mine);
+  const chatByScenario = new Map(myChats.map((c) => [String(c.scenarioId), String(c._id)]));
 
-  const started = new Map(
-    mine.map((p) => [String(p.scenarioId), String(p._id)]),
-  );
-  console.log("started:", started);
-  return scenarios.map((s) => ({
-    id: String(s._id),
-    title: s.title,
-    sceneSetup: s.sceneSetup,
-    incidentCount: s.incidents.length,
-    firstGoals:
-      s.incidents
-        .find((i) => i.id === s.startIncident)
-        ?.milestones.map((m) => m.goal) ?? [],
-    progressId: started.get(String(s._id)) ?? null,
-  }));
+  return scenarios.map((s) => {
+    const first = s.incidents.find((i) => i.id === s.startingIncident) ?? s.incidents[0];
+    return {
+      id: String(s._id),
+      title: s.title,
+      sceneSetup: s.sceneSetup.join(" "),
+      incidentCount: s.incidents.length,
+      firstGoals: first ? milestonesOf(first).map((m) => m.goal) : [],
+      chatId: chatByScenario.get(String(s._id)) ?? null,
+    };
+  });
 }
 
-
+// Chats screen: every chat of the user, scenario based or not, newest first.
 export async function listChats(): Promise<ChatSummary[]> {
   const { userId } = await requireUser();
-  const progresses = await UserScenarioProgress.find({ userId })
-    .sort({ updatedAt: -1 })
-    .lean<IUserScenarioProgress[]>();
-  const scenarios = await Scenario.find({
-    _id: { $in: progresses.map((p) => p.scenarioId) },
-  }).lean<IScenario[]>();
+  const chats = await Chat.find({ userId }).sort({ lastMessageAt: -1 }).lean<IChat[]>();
+  const scenarioIds = chats.flatMap((c) => (c.scenarioId ? [c.scenarioId] : []));
+  const [scenarios, progresses, incidentProgresses] = await Promise.all([
+    Scenario.find({ _id: { $in: scenarioIds } }).lean<IScenario[]>(),
+    ScenarioProgress.find({ userId, scenarioId: { $in: scenarioIds } }).lean<IScenarioProgress[]>(),
+    IncidentProgress.find({ userId, scenarioId: { $in: scenarioIds } }).lean<IIncidentProgress[]>(),
+  ]);
 
-  return Promise.all(
-    progresses.map(async (p) => {
-      const s = scenarios.find((x) => String(x._id) === String(p.scenarioId));
-      const incident = s?.incidents.find((i) => i.id === p.currentIncidentId);
-      const ip = p.incidents.find((i) => i.incidentId === p.currentIncidentId);
-      const last = await Message.findOne({
-        progressId: p._id,
-        incidentId: p.currentIncidentId,
-        channel: "group",
-      })
-        .sort({ createdAt: -1, _id: -1 })
-        .lean();
-      return {
-        progressId: String(p._id),
-        scenarioTitle: s?.title ?? "Mission",
-        incidentTitle: incident?.title ?? "",
-        lastText: last
-          ? `${last.senderType === "user" ? "You" : nameOf(s!, last.senderId)}: ${last.text}`
-          : "",
-        lastAt: (last?.createdAt ?? p.updatedAt).toISOString(),
-        done: ip?.milestonesDone.length ?? 0,
-        total: incident?.milestones.length ?? 0,
-        completed:
-          ip?.status === "completed" &&
-          s?.incidents.at(-1)?.id === p.currentIncidentId,
-      };
-    }),
-  );
+  return chats.map((chat) => {
+    const same = (id: Types.ObjectId) => String(id) === String(chat.scenarioId);
+    const scenario = scenarios.find((s) => same(s._id));
+    const progress = progresses.find((p) => same(p.scenarioId));
+    const incident = scenario?.incidents.find((i) => i.id === progress?.currentIncidentId);
+    const ip = incidentProgresses.find((p) => same(p.scenarioId) && p.incidentId === incident?.id);
+    return {
+      chatId: String(chat._id),
+      title: chat.title,
+      incidentTitle: incident?.title ?? "",
+      lastText: chat.lastMessage,
+      lastAt: chat.lastMessageAt.toISOString(),
+      done: ip?.completedMilestoneIds.length ?? 0,
+      total: incident?.milestones.length ?? 0,
+      completed: progress?.status === "completed",
+    };
+  });
 }
 
-export async function getThread(progressId: string): Promise<ThreadView> {
+export async function getThread(chatId: string): Promise<ThreadView> {
   const { userId } = await requireUser();
-  return buildThread(progressId, userId);
+  return buildThread(chatId, userId);
 }
 
-// ── Start a scenario ─────────────────────────────────────────────────────────
+// ── Copy a scenario into My Chats ────────────────────────────────────────────
 
 export async function startScenario(scenarioId: string): Promise<string> {
   const user = await requireUser();
   if (!isValidObjectId(scenarioId)) throw new Error("Scenario not found.");
-  const scenario = await Scenario.findOne({
-    _id: scenarioId,
-    published: true,
-  }).lean<IScenario>();
+  const scenario = await Scenario.findOne({ _id: scenarioId, isPublished: true }).lean<IScenario>();
   if (!scenario) throw new Error("Scenario not found.");
 
-  const existing = await UserScenarioProgress.findOne(
-    { userId: user.userId, scenarioId },
-    "_id",
-  ).lean();
+  const existing = await Chat.findOne({ userId: user.userId, scenarioId }, "_id").lean();
   if (existing) return String(existing._id);
 
-  const incident = scenario.incidents.find(
-    (i) => i.id === scenario.startIncident,
-  )!;
-  const guide = await guideOf(incident);
-  // Ask the AI first, so a failed call leaves nothing half-created.
-  const ctx = await storyContext(
-    {
-      cefrLevel: user.level,
-      memorySummary: "",
-      hiddenState: {},
-      incidentCount: 0,
-      done: [],
-    },
-    scenario,
-    incident,
-    guide.name,
-  );
-  const turn = await storyTurn(ctx, null);
+  const incident = scenario.incidents.find((i) => i.id === scenario.startingIncident) ?? scenario.incidents[0];
+  if (!incident) throw new Error("This scenario has no scenes yet.");
 
-  const progress = await UserScenarioProgress.create({
+  const lastMessage = await beginIncident(user, scenario, incident);
+  const now = new Date();
+  await ScenarioProgress.create({
     userId: user.userId,
     scenarioId: scenario._id,
+    status: "in_progress",
     currentIncidentId: incident.id,
-    incidents: [{ incidentId: incident.id }],
-    cefrLevel: user.level,
-    hiddenState: { moods: turn.moods },
+    startedAt: now,
+    lastActivityAt: now,
   });
-  await saveTurn(progress._id, scenario._id, incident, guide, turn, user);
-  return String(progress._id);
+  const chat = await Chat.create({ userId: user.userId, type: "scenario", title: scenario.title, scenarioId: scenario._id, lastMessage, lastMessageAt: now });
+  return String(chat._id);
 }
 
 // ── Send a message ───────────────────────────────────────────────────────────
 
-export async function sendMessage(
-  progressId: string,
-  rawText: string,
-): Promise<ThreadView> {
+export async function sendMessage(chatId: string, rawText: string): Promise<ThreadView> {
   const text = rawText.trim().slice(0, 500);
   if (!text) throw new Error("Write a message first.");
   const user = await requireUser();
-  const { progress, scenario } = await loadOwned(progressId, user.userId);
-  const incident = currentIncident(progress, scenario);
-  const ip = progress.incidents.find((i) => i.incidentId === incident.id)!;
+  const { chat, scenario, progress, incident, incidentProgress: ip, conversation, guide } = await loadChat(chatId, user.userId);
   if (ip.status === "completed") throw new Error("This scene is finished.");
 
-  const guide = await guideOf(incident);
-  const ctx = await storyContext(
-    {
-      cefrLevel: progress.cefrLevel,
-      memorySummary: progress.memorySummary,
-      hiddenState: progress.hiddenState,
-      incidentCount: ip.userMessageCount,
-      done: ip.milestonesDone,
-      progressId: progress._id,
-    },
-    scenario,
-    incident,
-    guide.name,
-  );
+  const ctx = storyContext(user.level, scenario, incident, guide, conversation.messages, ip.completedMilestoneIds);
 
   // The story and the language check do not depend on each other, so they run at the same time.
   // A failed check must never block the conversation. A failed story call does, and nothing is saved.
   const [turn, check] = await Promise.all([
     storyTurn(ctx, text),
     getTopics()
-      .then((topics) =>
-        checkMessage(text, progress.cefrLevel, user.nativeLanguage, topics),
-      )
-      .catch(() => ({ mistakes: [] as Mistake[], words: [] as WordInfo[] })),
+      .then((topics) => checkMessage(text, user.level, user.nativeLanguage, topics))
+      .catch(() => ({ mistakes: [] as Mistake[] })),
   ]);
 
-  await Message.create({
-    progressId: progress._id,
-    incidentId: incident.id,
-    channel: "group",
-    senderType: "user",
-    senderId: user.userId,
-    text,
-    mistakes: check.mistakes,
-  });
-  await saveTurn(progress._id, scenario._id, incident, guide, turn, user);
-  await saveWords(user, check.words, "mistake", scenario._id, incident.id);
+  const userMessage: NewMessage = { speaker: "user", text, evaluation: { errors: check.mistakes.map(toError) } };
+  await Conversation.updateOne({ _id: conversation._id }, { $push: { messages: { $each: [userMessage, ...turnMessages(turn, String(guide._id))] } } });
 
-  const moodUpdates = Object.fromEntries(
-    Object.entries(turn.moods).map(([id, m]) => [`hiddenState.moods.${id}`, m]),
-  );
-  await UserScenarioProgress.updateOne(
-    { _id: progress._id, "incidents.incidentId": incident.id },
+  // Goals the learner just reached give their XP.
+  const reached = milestonesOf(incident).filter((m) => turn.milestonesDone.includes(m.id));
+  const xp = reached.reduce((sum, m) => sum + (m.xp ?? 0), 0);
+  const doneIds = [...new Set([...ip.completedMilestoneIds, ...reached.map((m) => m.id)])];
+  await IncidentProgress.updateOne(
+    { _id: ip._id },
     {
-      $addToSet: {
-        "incidents.$.milestonesDone": { $each: turn.milestonesDone },
-      },
-      $inc: {
-        "incidents.$.userMessageCount": 1,
-        "incidents.$.mistakeCount": check.mistakes.length,
-      },
-      $set: moodUpdates,
+      $addToSet: { completedMilestoneIds: { $each: reached.map((m) => m.id) } },
+      $inc: { turnCount: 1, xpEarned: xp },
+      $set: { currentMilestoneId: milestonesOf(incident).find((m) => !doneIds.includes(m.id))?.id },
     },
   );
+  await ScenarioProgress.updateOne({ _id: progress._id }, { $inc: { totalXp: xp }, $set: { lastActivityAt: new Date() } });
+  await touchChat(chat._id, lastLine(incident, turn));
 
-  const done = new Set([...ip.milestonesDone, ...turn.milestonesDone]);
-  if (
-    done.size === incident.milestones.length ||
-    ip.userMessageCount + 1 >= MAX_MESSAGES
-  ) {
-    await completeIncident(
-      progress,
-      scenario,
-      incident,
-      user,
-      done.size === incident.milestones.length,
-    );
+  if (doneIds.length === incident.milestones.length || ip.turnCount + 1 >= MAX_MESSAGES) {
+    await completeIncident(user.userId, scenario, progress, incident, ip.xpEarned + xp);
   }
-  return buildThread(progressId, user.userId);
+  return buildThread(chatId, user.userId);
 }
 
-// ── End of a scene: count, write feedback, give XP ───────────────────────────
+// ── End of a scene: close it, move the scenario on, give XP ──────────────────
 
-async function completeIncident(
-  progress: IUserScenarioProgress,
-  scenario: IScenario,
-  incident: Incident,
-  user: { userId: string; level: string; nativeLanguage: string },
-  allGoalsDone: boolean,
-) {
-  const [mine, topics, saved, fresh] = await Promise.all([
-    Message.find({
-      progressId: progress._id,
-      incidentId: incident.id,
-      channel: "group",
-      senderType: "user",
-    }).lean(),
-    getTopics(),
-    UserVocab.find(
-      {
-        userId: user.userId,
-        scenarioId: scenario._id,
-        incidentId: incident.id,
-      } as never,
-      "word",
-    ).lean(),
-    UserScenarioProgress.findById(progress._id).lean<IUserScenarioProgress>(),
-  ]);
-  const doneIds =
-    fresh?.incidents.find((i) => i.incidentId === incident.id)
-      ?.milestonesDone ?? [];
-  const mistakes = mine.flatMap((m) => m.mistakes);
+async function completeIncident(userId: string, scenario: IScenario, progress: IScenarioProgress, incident: Incident, xpEarned: number) {
+  const now = new Date();
+  const isLast = scenario.incidents.at(-1)?.id === incident.id;
 
-  // Plain counting, no AI: which grammar topics came up most.
-  const counts = new Map<string, number>();
-  for (const m of mistakes)
-    for (const slug of m.topicSlugs)
-      counts.set(slug, (counts.get(slug) ?? 0) + 1);
-  const topTopics = [...counts]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([slug, count]) => ({
-      slug,
-      title: topics.find((t) => t.slug === slug)?.title ?? slug,
-      count,
-    }));
-  const examples = mistakes
-    .slice(0, 3)
-    .map(({ wrong, right, why }) => ({ wrong, right, why }));
-
-  // One AI call turns those numbers into a kind summary.
-  const fb = await writeFeedback({
-    scenarioTitle: scenario.title,
-    incidentTitle: incident.title,
-    level: progress.cefrLevel,
-    nativeLanguage: user.nativeLanguage,
-    messages: mine.length,
-    mistakes: mistakes.length,
-    topics: topTopics,
-    examples,
-    goals: incident.milestones.map((m) => ({
-      goal: m.goal,
-      done: doneIds.includes(m.id),
-    })),
-  });
-
-  const feedback: FeedbackView = {
-    summary: fb.summary,
-    wins: fb.wins,
-    focus: fb.focus,
-    messages: mine.length,
-    mistakes: mistakes.length,
-    topics: topTopics,
-    examples,
-    words: saved.map((w) => w.word).slice(0, 8),
-    allGoalsDone,
-  };
-  await UserScenarioProgress.updateOne(
-    { _id: progress._id, "incidents.incidentId": incident.id },
+  await IncidentProgress.updateOne({ userId, scenarioId: scenario._id, incidentId: incident.id }, { status: "completed", completedAt: now });
+  await Conversation.updateOne({ userId, scenarioId: scenario._id, incidentId: incident.id }, { status: "completed" });
+  await ScenarioProgress.updateOne(
+    { _id: progress._id },
     {
-      $set: {
-        "incidents.$.status": "completed",
-        "incidents.$.feedback": feedback,
-        memorySummary: `${progress.memorySummary} ${fb.memory}`
-          .trim()
-          .slice(-600),
-      },
+      $addToSet: { completedIncidentIds: incident.id },
+      ...(isLast ? { $set: { status: "completed", completedAt: now } } : {}),
     },
   );
-  await awardXp(user.userId, allGoalsDone ? XP_ALL_GOALS : XP_PARTIAL);
+  await awardXp(userId, xpEarned);
 }
 
 // Same streak rule as the reading and writing sessions: same day keeps it, next day adds one, a gap resets it.
@@ -632,104 +407,42 @@ async function awardXp(userId: string, xp: number) {
 
 // ── Next scene ───────────────────────────────────────────────────────────────
 
-export async function nextIncident(progressId: string): Promise<ThreadView> {
+export async function nextIncident(chatId: string): Promise<ThreadView> {
   const user = await requireUser();
-  const { progress, scenario } = await loadOwned(progressId, user.userId);
-  const index = scenario.incidents.findIndex(
-    (i) => i.id === progress.currentIncidentId,
-  );
-  const ip = progress.incidents.find(
-    (i) => i.incidentId === progress.currentIncidentId,
-  );
-  const incident = scenario.incidents[index + 1];
-  if (ip?.status !== "completed" || !incident)
-    throw new Error("There is no next scene yet.");
+  const { chat, scenario, progress, incident, incidentProgress: ip } = await loadChat(chatId, user.userId);
+  const next = scenario.incidents[scenario.incidents.findIndex((i) => i.id === incident.id) + 1];
+  if (ip.status !== "completed" || !next) throw new Error("There is no next scene yet.");
 
-  const guide = await guideOf(incident);
-  const ctx = await storyContext(
-    {
-      cefrLevel: progress.cefrLevel,
-      memorySummary: progress.memorySummary,
-      hiddenState: progress.hiddenState,
-      incidentCount: 0,
-      done: [],
-    },
-    scenario,
-    incident,
-    guide.name,
-  );
-  const turn = await storyTurn(ctx, null);
-
-  await UserScenarioProgress.updateOne(
-    { _id: progress._id },
-    {
-      $set: {
-        currentIncidentId: incident.id,
-        ...Object.fromEntries(
-          Object.entries(turn.moods).map(([id, m]) => [
-            `hiddenState.moods.${id}`,
-            m,
-          ]),
-        ),
-      },
-      $push: { incidents: { incidentId: incident.id } },
-    },
-  );
-  await saveTurn(progress._id, scenario._id, incident, guide, turn, user);
-  return buildThread(progressId, user.userId);
+  const lastMessage = await beginIncident(user, scenario, next);
+  await ScenarioProgress.updateOne({ _id: progress._id }, { currentIncidentId: next.id });
+  await touchChat(chat._id, lastMessage);
+  return buildThread(chatId, user.userId);
 }
 
 // ── Ask the guide / translate ────────────────────────────────────────────────
 
-export async function askGuide(
-  progressId: string,
-  rawQuestion: string,
-): Promise<ThreadView> {
+export async function askGuide(chatId: string, rawQuestion: string): Promise<ThreadView> {
   const question = rawQuestion.trim().slice(0, 300);
   if (!question) throw new Error("Ask something first.");
   const user = await requireUser();
-  const { progress, scenario } = await loadOwned(progressId, user.userId);
-  const incident = currentIncident(progress, scenario);
-  const ip = progress.incidents.find((i) => i.incidentId === incident.id)!;
-  const guide = await guideOf(incident);
+  const { scenario, incident, incidentProgress: ip, conversation, guide } = await loadChat(chatId, user.userId);
 
-  const ctx = await storyContext(
-    {
-      cefrLevel: progress.cefrLevel,
-      memorySummary: progress.memorySummary,
-      hiddenState: progress.hiddenState,
-      incidentCount: ip.userMessageCount,
-      done: ip.milestonesDone,
-      progressId: progress._id,
-    },
-    scenario,
-    incident,
-    guide.name,
-  );
+  const ctx = storyContext(user.level, scenario, incident, guide, conversation.messages, ip.completedMilestoneIds);
   const answer = await guideAnswer(ctx, question);
   if (!answer) throw new Error("The guide could not answer. Try again.");
 
-  const base = {
-    progressId: progress._id,
-    incidentId: incident.id,
-    channel: "guide",
-  };
-  await Message.insertMany([
-    { ...base, senderType: "user", senderId: user.userId, text: question },
-    { ...base, senderType: "guide", senderId: guide.id, text: answer },
-  ]);
-  return buildThread(progressId, user.userId);
+  // The answer becomes the guide's latest note. The question itself is not saved.
+  const note: NewMessage = { speaker: "guide", characterId: String(guide._id), text: answer };
+  await Conversation.updateOne({ _id: conversation._id }, { $push: { messages: note } });
+  return buildThread(chatId, user.userId);
 }
 
+// Translations are not saved: the screen keeps them until the chat is closed.
 export async function translateMessage(messageId: string): Promise<string> {
   const user = await requireUser();
   if (!isValidObjectId(messageId)) throw new Error("Message not found.");
-  const message = await Message.findById(messageId);
-  if (!message) throw new Error("Message not found.");
-  await loadOwned(String(message.progressId), user.userId); // makes sure the message belongs to this user
-  if (message.translation) return message.translation;
-
-  message.translation = await translateText(message.text, user.nativeLanguage);
-  await message.save();
-  return message.translation;
+  const found = await Conversation.findOne({ userId: user.userId, "messages._id": messageId }, { "messages.$": 1 }).lean<IConversation>();
+  const text = found?.messages[0]?.text;
+  if (!text) throw new Error("Message not found.");
+  return translateText(text, user.nativeLanguage);
 }

@@ -12,8 +12,6 @@ export type Mistake = {
   category: MistakeCategory;
 };
 
-export type WordInfo = { word: string; partOfSpeech: string; meaning: string; example: string };
-export type Mood = { mood: string; trust: number }; // trust 0 to 10
 
 // ── What the browser sees ────────────────────────────────────────────────────
 
@@ -33,18 +31,15 @@ export type MessageView = {
 
 export type FeedbackView = {
   summary: string;
-  wins: string[];
-  focus: string[];
   messages: number;
   mistakes: number;
   topics: { slug: string; title: string; count: number }[];
   examples: { wrong: string; right: string; why: string }[];
-  words: string[];
   allGoalsDone: boolean;
 };
 
 export type ThreadView = {
-  progressId: string;
+  chatId: string;
   scenarioTitle: string;
   incidentTitle: string;
   incidentNumber: number;
@@ -60,14 +55,14 @@ export type ThreadView = {
 };
 
 export type ChatSummary = {
-  progressId: string;
-  scenarioTitle: string;
-  incidentTitle: string;
+  chatId: string;
+  title: string;
+  incidentTitle: string; // empty for chats that are not based on a scenario
   lastText: string;
   lastAt: string;
   done: number;
   total: number;
-  completed: boolean; // the whole scenario is finished
+  completed: boolean; // the whole scenario is finished (false for chats without a scenario)
 };
 
 export type ScenarioCard = {
@@ -76,5 +71,5 @@ export type ScenarioCard = {
   sceneSetup: string;
   incidentCount: number;
   firstGoals: string[];
-  progressId: string | null; // set when the user already started it
+  chatId: string | null; // set when the user already copied it to their chats
 };
