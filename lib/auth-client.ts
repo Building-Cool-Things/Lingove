@@ -4,7 +4,7 @@ import { createAuthClient } from "better-auth/react";
 import type { auth } from "@/lib/auth";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.APP_URL ?? "http://localhost:3000",
+  baseURL: "https://lingove2.vercel.app",
   plugins: [customSessionClient<typeof auth>()],
 });
 
