@@ -1,0 +1,1449 @@
+{
+  "guides": [
+    {
+      "key": "maya",
+      "name": "Maya",
+      "avatar": "/avatars/guides/maya.png"
+    },
+    {
+      "key": "jonah",
+      "name": "Jonah",
+      "avatar": "/avatars/guides/jonah.png"
+    },
+    {
+      "key": "zara",
+      "name": "Zara",
+      "avatar": "/avatars/guides/zara.png"
+    }
+  ],
+  "scenarios": [
+    {
+      "title": "Night Shift at Hotel Albatross",
+      "sceneSetup": "Lisbon, a small luxury hotel in the Alfama district. It is your first night shift as a receptionist. The night manager has gone home, the building is old, and everything that can go wrong tonight will. By 7 AM you will have handled angry guests, a lost treasure, a blackout and a missing 200 euros, and someone on your own team is not who they seem.",
+      "startIncident": "overbooked_arrival",
+      "published": true,
+      "characters": [
+        {
+          "id": "ines",
+          "name": "Inês Duarte",
+          "role": "Night Manager",
+          "persona": "Portuguese, precise, dry sense of humour. Writes short, formal messages. Hates excuses, respects staff who take ownership of problems. Speaks careful, correct English.",
+          "secret": null
+        },
+        {
+          "id": "tobias",
+          "name": "Tobias Weller",
+          "role": "Guest from Hamburg",
+          "persona": "Blunt, impatient, notices every detail and asks pointed questions. Uses dry sarcasm. Warms up only to honest, specific answers, never to flattery.",
+          "secret": "He is an undercover inspector for 'The Gilded Key' luxury hotel guide and is testing the staff all night. He must not reveal this until the final incident."
+        },
+        {
+          "id": "grace",
+          "name": "Grace Okafor",
+          "role": "Head of Housekeeping",
+          "persona": "Nigerian-British, warm and motherly, calls the user 'my dear'. Extremely organised and keeps a handwritten logbook of every room entry with times. Defends her team strongly.",
+          "secret": null
+        },
+        {
+          "id": "rafael",
+          "name": "Rafael Moreno",
+          "role": "Concierge",
+          "persona": "Spanish, charming, funny, always has 'a guy' for everything. Calls the user 'chefe'. Offers help before being asked and is very likeable.",
+          "secret": "He takes kickbacks from a taxi company that overcharges guests, and he took 200 euros from the cash drawer during the blackout. When suspected, he tries to blame the user. He never confesses directly, but his story about where he was during the blackout changes: first he says he was outside smoking, later that he was helping Grace."
+        },
+        {
+          "id": "yuki",
+          "name": "Yuki Tanaka",
+          "role": "Guest from Osaka",
+          "persona": "Elderly, very polite, speaks slowly and indirectly, apologises often and avoids complaining. Travelling alone for the first time since her husband died last year.",
+          "secret": null
+        },
+        {
+          "id": "marcus",
+          "name": "Marcus Bell",
+          "role": "Guest from Melbourne",
+          "persona": "Loud, friendly, sarcastic Australian. Uses slang like 'mate', 'no worries', 'rip-off'. Gets angry fast but calms down fast if treated fairly.",
+          "secret": null
+        }
+      ],
+      "incidents": [
+        {
+          "id": "overbooked_arrival",
+          "title": "No Room for Mr. Weller",
+          "scenario": "11:40 PM. Tobias Weller arrives with a prepaid booking for two nights, but the system shows the hotel is full and his reservation was cancelled by mistake. He is tired and irritated. Only the Presidential Suite is free, and Inês has said by message that the user may offer it.",
+          "userRole": "New night receptionist on your first shift",
+          "openingFrom": "tobias",
+          "characterParticipants": [
+            "tobias",
+            "ines",
+            "rafael"
+          ],
+          "userGuideId": "maya",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Apologise and calmly confirm his booking details: name, dates and confirmation number"
+            },
+            {
+              "id": "m2",
+              "goal": "Explain the problem honestly without blaming the system or your colleagues"
+            },
+            {
+              "id": "m3",
+              "goal": "Offer a real solution (suite upgrade, partner hotel or compensation) and get Tobias to accept one"
+            }
+          ],
+          "keyVocab": [
+            "reservation",
+            "confirmation number",
+            "fully booked",
+            "upgrade",
+            "inconvenience",
+            "compensation"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Good evening. I have a booking. Weller. Tobias Weller. Two nights. Where is my key?",
+              "milestoneGoals": {
+                "m1": "Say sorry and ask for his name and booking number.",
+                "m2": "Say: 'There is a problem with your room.'",
+                "m3": "Offer one solution: a bigger room or another hotel."
+              },
+              "guideHints": [
+                "Try: 'I am sorry, sir. Can I see your booking, please?'",
+                "Try: 'Sorry, there is a problem. We have no free room.'",
+                "Try: 'We can give you a big suite.' or 'We can book another hotel for you.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Good evening. Reservation under Weller, two nights, prepaid. I've been travelling for fourteen hours, so I'd appreciate this being quick.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Weller. Two nights, prepaid. Before you tell me there's 'a small issue', you should know I've already seen the 'no vacancy' sign outside.",
+              "milestoneGoals": {
+                "m1": "Verify his booking tactfully while he tests your patience with sarcasm",
+                "m2": "Take ownership of the mistake without blaming the system or your colleagues",
+                "m3": "Negotiate a solution he accepts without promising more than you are allowed to"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "missing_watch",
+          "title": "The Watch in Room 214",
+          "scenario": "12:30 AM. Mrs. Tanaka calls the front desk. Her late husband's gold watch is missing from her bedside table after the turndown service. The watch is actually in the hotel laundry, wrapped inside a hand towel. Grace will find it only if the user asks her to check the laundry or the towels. Rafael eagerly suggests that 'the new cleaner' probably took it.",
+          "userRole": "Night receptionist",
+          "openingFrom": "yuki",
+          "characterParticipants": [
+            "yuki",
+            "grace",
+            "rafael"
+          ],
+          "userGuideId": "maya",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Show empathy and ask Mrs. Tanaka when and where she last saw the watch"
+            },
+            {
+              "id": "m2",
+              "goal": "Ask Grace for the turndown log and find out who entered room 214"
+            },
+            {
+              "id": "m3",
+              "goal": "Find the watch with Grace's help, or give Mrs. Tanaka a clear plan and a time for an update"
+            }
+          ],
+          "keyVocab": [
+            "belongings",
+            "turndown service",
+            "last seen",
+            "logbook",
+            "reassure",
+            "sentimental value"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Hello... sorry to call so late. My watch is not here. It was my husband's watch.",
+              "milestoneGoals": {
+                "m1": "Say sorry and ask: 'Where did you put it?'",
+                "m2": "Ask Grace: 'Who cleaned room 214?'",
+                "m3": "Tell Mrs. Tanaka what you will do next."
+              },
+              "guideHints": [
+                "Try: 'I am very sorry. When did you last see the watch?'",
+                "Try: 'Grace, who cleaned room 214 tonight?'",
+                "Try: 'We will look for it now. I will call you in 30 minutes.'"
+              ]
+            },
+            "mid": {
+              "openingText": "I'm so sorry to disturb you at this hour. My husband's watch... it was on the bedside table before dinner, and now I can't find it anywhere.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Forgive me, I'm sure it's nothing and I'm being a foolish old woman, but... the watch on my bedside table seems to have gone.",
+              "milestoneGoals": {
+                "m1": "Gently draw out precise details from a guest who keeps apologising and avoiding the point",
+                "m2": "Question Grace about the log diplomatically, without suggesting her team stole it",
+                "m3": "Find the watch or give a concrete plan, while handling Rafael's eager theory about 'the new cleaner'"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "taxi_trap",
+          "title": "The 90-Euro Taxi",
+          "scenario": "1:15 AM. Marcus Bell comes back from a night out furious. The taxi Rafael booked for him charged 90 euros for a ten-minute ride. Rafael says the driver is 'a friend, totally legit' and avoids giving the company's details or a receipt. Inês is reachable by message.",
+          "userRole": "Night receptionist",
+          "openingFrom": "marcus",
+          "characterParticipants": [
+            "marcus",
+            "rafael",
+            "ines"
+          ],
+          "userGuideId": "maya",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Listen to Marcus's complaint and summarise it back to show you understand"
+            },
+            {
+              "id": "m2",
+              "goal": "Ask Rafael for the taxi company's details and notice that he avoids giving a receipt"
+            },
+            {
+              "id": "m3",
+              "goal": "Agree on a fair next step with Marcus (written complaint, partial refund or report) and inform Inês"
+            }
+          ],
+          "keyVocab": [
+            "overcharge",
+            "fare",
+            "receipt",
+            "complaint",
+            "refund",
+            "rip-off"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Mate! The taxi was 90 euros! Ten minutes! Your guy booked it!",
+              "milestoneGoals": {
+                "m1": "Say sorry and repeat: 'The taxi was 90 euros?'",
+                "m2": "Ask Rafael: 'What is the taxi company name?'",
+                "m3": "Tell Marcus: 'I will tell my manager. We will help you.'"
+              },
+              "guideHints": [
+                "Try: 'I am sorry. So the taxi was 90 euros for 10 minutes?'",
+                "Try: 'Rafael, what is the name of the taxi company? Do you have a receipt?'",
+                "Try: 'I will write to my manager now. We will help you.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Ninety euros, mate. Ninety. For a ten-minute ride your concierge booked. Someone's having a laugh, and it isn't me.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Right, so either Lisbon taxis are priced like private jets, or your mate Rafael's running a nice little side business. Which is it?",
+              "milestoneGoals": {
+                "m1": "Calm Marcus's sarcasm without sounding defensive",
+                "m2": "Probe Rafael's link to the taxi firm without making a direct accusation",
+                "m3": "Propose a resolution within your authority and brief Inês in a short, neutral message"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "blackout",
+          "title": "2:07 AM Blackout",
+          "scenario": "2:07 AM. The power goes out across the street. The backup generator fails to start. Tobias is stuck in the lift between the 3rd and 4th floors in the dark. Grace has a torch. Inês is at home and reachable only by message. Rafael is nowhere to be seen.",
+          "userRole": "Night receptionist, in charge of the building",
+          "openingFrom": "tobias",
+          "characterParticipants": [
+            "tobias",
+            "grace",
+            "ines"
+          ],
+          "userGuideId": "maya",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Calm Tobias down and give him clear, simple instructions through the lift intercom"
+            },
+            {
+              "id": "m2",
+              "goal": "Coordinate with Grace: who calls the lift technician and who checks on the other guests"
+            },
+            {
+              "id": "m3",
+              "goal": "Send Inês a short status update: what happened, what you did and what you need"
+            }
+          ],
+          "keyVocab": [
+            "power cut",
+            "stuck",
+            "emergency",
+            "technician",
+            "stay calm",
+            "status update"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Hello? The lift is not moving! It is dark! Help!",
+              "milestoneGoals": {
+                "m1": "Tell Tobias: 'Please stay calm. Help is coming.'",
+                "m2": "Ask Grace: 'Please call the technician.'",
+                "m3": "Write to Inês: what happened and what you did."
+              },
+              "guideHints": [
+                "Try: 'Mr. Weller, please stay calm. Help is coming. Do not open the door.'",
+                "Try: 'Grace, please call the technician. I will check the guests.'",
+                "Try: 'Power cut at 2 AM. Mr. Weller is in the lift. Technician is coming.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Hello? Hello! The lift has stopped between floors and the lights are out. Is anyone actually working tonight?",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "I'd like to register, for the record, that I am currently suspended in a dark metal box. Shall I wait, or is there a procedure?",
+              "milestoneGoals": {
+                "m1": "Reassure a sarcastic, claustrophobic guest using calm and precise instructions",
+                "m2": "Delegate tasks to Grace clearly while she argues for a different priority",
+                "m3": "Write Inês a crisp incident update in under 60 words"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "cash_drawer",
+          "title": "200 Euros Short",
+          "scenario": "4:30 AM. Inês arrives early and counts the cash drawer: 200 euros are missing. Only the user and Rafael had access tonight. Rafael suggests the user made 'a first-night mistake' and later claims the user left the desk open during the blackout. His story changes: first he says he was outside smoking during the blackout, then that he was helping Grace. Grace's logbook shows she was alone on the 2nd floor.",
+          "userRole": "Night receptionist under suspicion",
+          "openingFrom": "ines",
+          "characterParticipants": [
+            "ines",
+            "rafael",
+            "grace"
+          ],
+          "userGuideId": "maya",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Answer Inês honestly about your use of the cash drawer tonight"
+            },
+            {
+              "id": "m2",
+              "goal": "Defend yourself calmly with facts: where you were and who saw you"
+            },
+            {
+              "id": "m3",
+              "goal": "Point out the contradiction in Rafael's story using Grace's logbook, without insulting him"
+            }
+          ],
+          "keyVocab": [
+            "discrepancy",
+            "cash drawer",
+            "accuse",
+            "alibi",
+            "contradiction",
+            "evidence"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "The cash is 200 euros short. Who used the drawer tonight?",
+              "milestoneGoals": {
+                "m1": "Tell Inês: 'I used the drawer. I did not take money.'",
+                "m2": "Say where you were: 'At 2 AM I was at the lift.'",
+                "m3": "Ask Grace: 'Was Rafael with you?'"
+              },
+              "guideHints": [
+                "Try: 'I used the drawer two times. I did not take any money.'",
+                "Try: 'At 2 AM I was at the lift with Mr. Weller. Grace saw me.'",
+                "Try: 'Grace, was Rafael with you at 2 AM? Can we check your book?'"
+              ]
+            },
+            "mid": {
+              "openingText": "I've just counted the drawer. We're two hundred euros short. I need everyone's version of tonight, starting with you.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Two hundred euros are missing from a drawer only two people could open tonight. I'm not interested in theories. I'm interested in timelines.",
+              "milestoneGoals": {
+                "m1": "Explain your use of the drawer without sounding guilty or panicked",
+                "m2": "Give a clear, chronological account of your night under pressure",
+                "m3": "Expose Rafael's inconsistency with evidence while staying professional and fair"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "morning_handover",
+          "title": "The Handover",
+          "scenario": "7:00 AM. The sun is up. Tobias comes to the desk and reveals he is an inspector for 'The Gilded Key' hotel guide. He asks the user to describe the night honestly, good and bad. Mrs. Tanaka comes down to say thank you. Inês asks for a written handover note for the morning team.",
+          "userRole": "Night receptionist finishing your first shift",
+          "openingFrom": "tobias",
+          "characterParticipants": [
+            "tobias",
+            "ines",
+            "yuki"
+          ],
+          "userGuideId": "maya",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Respond professionally to Tobias's surprise reveal"
+            },
+            {
+              "id": "m2",
+              "goal": "Summarise the night for Tobias honestly, including what went wrong and how it was fixed"
+            },
+            {
+              "id": "m3",
+              "goal": "Write a handover note for the morning team: issues, actions taken and follow-ups"
+            }
+          ],
+          "keyVocab": [
+            "handover",
+            "follow-up",
+            "inspector",
+            "summary",
+            "outcome",
+            "priority"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Good morning. I am not only a guest. I check hotels. I write reports about them.",
+              "milestoneGoals": {
+                "m1": "Say: 'Oh! Thank you for telling me. Nice to meet you.'",
+                "m2": "Tell Tobias three things that happened last night.",
+                "m3": "Write three short lines for the morning team."
+              },
+              "guideHints": [
+                "Try: 'Oh! Thank you for telling me, Mr. Weller.'",
+                "Try: 'Last night the power went off. A watch was lost. Some money is missing.'",
+                "Try: 'Room 214: watch found. Lift: technician came. Cash: manager is checking.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Morning. I owe you an explanation. I'm an inspector for The Gilded Key, and last night was, shall we say, a very complete test.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Coffee? You've earned it. I'll be candid: I review hotels for The Gilded Key, and your night is about to become the most interesting chapter of my report.",
+              "milestoneGoals": {
+                "m1": "Handle the reveal with composure, without flattery or panic",
+                "m2": "Present a balanced account that admits failures and highlights recovery",
+                "m3": "Draft a structured handover note with priorities and who owns each follow-up"
+              },
+              "guideHints": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Whiteout at Station Borealis",
+      "sceneSetup": "Svalbard, 78 degrees north. Station Borealis is a tiny research base where six people study melting glaciers. You have just arrived as the new communications and logistics officer. Within days a storm cuts the station off from the world, a polar bear walks into the story, the medic gets hurt, and you discover that the station's most loved scientist has been faking his data. Up here, clear words keep people alive.",
+      "startIncident": "arrival_briefing",
+      "published": true,
+      "characters": [
+        {
+          "id": "astrid",
+          "name": "Dr. Astrid Lindqvist",
+          "role": "Station Chief",
+          "persona": "Swedish, calm, uses few words, decisive. Expects clear, radio-style communication. Never raises her voice. Values honesty over comfort.",
+          "secret": null
+        },
+        {
+          "id": "mateo",
+          "name": "Mateo Silva",
+          "role": "Glaciologist",
+          "persona": "Brazilian, funny, warm, plays guitar in the evenings, everyone's favourite. Calls the user 'novato' (rookie). Jokes even in serious moments.",
+          "secret": "He has been falsifying ice-core temperature data for months to keep the station's funding. When the discrepancy is found, he tries to blame the user, who uploaded the files. Friendly until cornered, then emotional. He uses the injury in incident 4 as a distraction to edit files in the lab."
+        },
+        {
+          "id": "kofi",
+          "name": "Kofi Mensah",
+          "role": "Engineer",
+          "persona": "Ghanaian, practical, impatient with vague requests. Often says 'Be specific.' Explains technical things in detail and trusts numbers more than people.",
+          "secret": null
+        },
+        {
+          "id": "hana",
+          "name": "Dr. Hana Kowalski",
+          "role": "Medic",
+          "persona": "Polish, direct, dark sense of humour, very protective of everyone's health. Stays in control even when she is the patient.",
+          "secret": null
+        },
+        {
+          "id": "elif",
+          "name": "Elif Demir",
+          "role": "Bush Pilot",
+          "persona": "Turkish, confident, fast-talking, strict about weight limits and weather. Cannot be charmed or rushed. Respects people who give clear numbers.",
+          "secret": null
+        }
+      ],
+      "incidents": [
+        {
+          "id": "arrival_briefing",
+          "title": "Welcome to the Edge of the World",
+          "scenario": "The user has just landed. Astrid gathers the team in the mess room for a safety briefing. The three key rules: never go outside alone, always check in by radio every 30 minutes outside, and report any polar bear sighting immediately. Mateo makes jokes; Kofi wants the user to know the radio channels exactly.",
+          "userRole": "New communications and logistics officer, first day",
+          "openingFrom": "astrid",
+          "characterParticipants": [
+            "astrid",
+            "mateo",
+            "kofi"
+          ],
+          "userGuideId": "jonah",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Introduce yourself and your role to the team"
+            },
+            {
+              "id": "m2",
+              "goal": "Ask Astrid at least two questions about the station's safety rules"
+            },
+            {
+              "id": "m3",
+              "goal": "Repeat back the three key safety rules to confirm you understood"
+            }
+          ],
+          "keyVocab": [
+            "briefing",
+            "protocol",
+            "confirm",
+            "check in",
+            "sighting",
+            "roger that"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Welcome. I am Astrid. I am the chief here. Please tell us your name and your job.",
+              "milestoneGoals": {
+                "m1": "Say your name and your job.",
+                "m2": "Ask Astrid two questions about safety.",
+                "m3": "Say the three rules again."
+              },
+              "guideHints": [
+                "Try: 'Hello, I am [name]. I am the new communications officer.'",
+                "Try: 'Can I go outside alone?' / 'What do I do if I see a bear?'",
+                "Try: 'Rule one: never go out alone. Rule two: call on the radio every 30 minutes. Rule three: report bears.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Welcome to Borealis. You've arrived at the right time, or the wrong one, depending on how you feel about storms. Introduce yourself to the team.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Welcome. A word of advice: up here, misunderstandings are more dangerous than the cold. So, who are you, and what exactly do you think you're here to do?",
+              "milestoneGoals": {
+                "m1": "Introduce yourself confidently and define your role precisely",
+                "m2": "Ask probing questions about edge cases in the safety rules",
+                "m3": "Paraphrase the three rules accurately while Mateo tries to joke you off track"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "storm_rationing",
+          "title": "Seven Days of Fuel, Five in the Tank",
+          "scenario": "A whiteout storm hits. The supply flight is cancelled for seven days. Kofi says there is fuel for five days at current use. Mateo insists the generator must run 24 hours for his ice-core freezer. Heating, cooking and lab equipment all use fuel. Astrid wants one clear plan from the user.",
+          "userRole": "Logistics officer responsible for supplies",
+          "openingFrom": "kofi",
+          "characterParticipants": [
+            "kofi",
+            "mateo",
+            "astrid"
+          ],
+          "userGuideId": "jonah",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Ask Kofi for exact numbers: fuel left and daily use for each system"
+            },
+            {
+              "id": "m2",
+              "goal": "Negotiate generator hours between Kofi's limits and Mateo's freezer needs"
+            },
+            {
+              "id": "m3",
+              "goal": "Propose a clear rationing plan to Astrid and get her approval"
+            }
+          ],
+          "keyVocab": [
+            "ration",
+            "fuel",
+            "generator",
+            "shortage",
+            "compromise",
+            "priority"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "The plane is not coming. Big storm. We have fuel for 5 days. We need 7.",
+              "milestoneGoals": {
+                "m1": "Ask Kofi: 'How much fuel do we use every day?'",
+                "m2": "Ask Mateo: 'Can the freezer work fewer hours?'",
+                "m3": "Tell Astrid your plan in two or three sentences."
+              },
+              "guideHints": [
+                "Try: 'Kofi, how much fuel do we use every day?'",
+                "Try: 'Mateo, can the freezer work only at night?'",
+                "Try: 'My plan: less heating in the day. Freezer only at night. No lab machines.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Bad news. The supply flight's cancelled and the storm's sitting on us for a week. We've got fuel for five days at current usage. Do the maths.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "So. Weather says seven days, the tank says five, and Mateo says his freezer is non-negotiable. Somebody here needs to be the adult. Volunteers?",
+              "milestoneGoals": {
+                "m1": "Extract precise consumption figures from Kofi and spot what is missing",
+                "m2": "Challenge Mateo's 'non-negotiable' position with data and diplomacy",
+                "m3": "Present a justified plan to Astrid and defend it against one objection"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "bear_alert",
+          "title": "Bear on the Ridge",
+          "scenario": "A short break in the storm. Hana and Mateo are outside at the weather mast, 400 metres north of the station. On the camera feed the user sees a polar bear about 300 metres north-east of them, walking slowly towards the mast. Mateo thinks the user is joking. The user must use clear radio procedure.",
+          "userRole": "Radio operator at base",
+          "openingFrom": "hana",
+          "characterParticipants": [
+            "hana",
+            "mateo",
+            "astrid"
+          ],
+          "userGuideId": "jonah",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Warn Hana and Mateo immediately using clear radio language"
+            },
+            {
+              "id": "m2",
+              "goal": "Give the bear's exact position (direction and distance) and movement"
+            },
+            {
+              "id": "m3",
+              "goal": "Guide them back to the station step by step and confirm they are safe inside"
+            }
+          ],
+          "keyVocab": [
+            "over",
+            "copy",
+            "north-east",
+            "approaching",
+            "immediately",
+            "take cover"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Base, this is Hana. We are at the mast. All okay. Over.",
+              "milestoneGoals": {
+                "m1": "Say: 'Hana, there is a bear! Come back now! Over.'",
+                "m2": "Say where the bear is: direction and metres.",
+                "m3": "Tell them which way to walk, then ask: 'Are you inside?'"
+              },
+              "guideHints": [
+                "Try: 'Hana, Mateo, there is a bear! Come back now! Over.'",
+                "Try: 'The bear is north-east. 300 metres. It is walking to you. Over.'",
+                "Try: 'Walk south to the station. Do not run. Tell me when you are inside. Over.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Base, Hana here. We're at the weather mast, about ten minutes of work left. Visibility's decent for once. Over.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Base, Hana. Mateo's serenading the anemometer again, so morale is high. Ten minutes to finish. Anything I should know? Over.",
+              "milestoneGoals": {
+                "m1": "Deliver an urgent warning without causing panic, using correct radio procedure",
+                "m2": "Describe the bear's position and movement with precise directional language",
+                "m3": "Override Mateo's joking and coordinate a safe return route until confirmation"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "medic_down",
+          "title": "When the Medic Is the Patient",
+          "scenario": "Running back, Hana slipped on ice and hurt her ankle. She is the only medic, so she talks the user through the first aid herself: check swelling, immobilise with a splint from the red kit, elevate, ice. Mateo says he will 'get blankets' and disappears to the lab for 20 minutes. Astrid needs a report.",
+          "userRole": "Acting first-aider",
+          "openingFrom": "hana",
+          "characterParticipants": [
+            "hana",
+            "astrid",
+            "mateo"
+          ],
+          "userGuideId": "jonah",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Ask Hana clear questions about her injury and her pain level"
+            },
+            {
+              "id": "m2",
+              "goal": "Follow Hana's first-aid instructions and confirm each step"
+            },
+            {
+              "id": "m3",
+              "goal": "Report Hana's condition to Astrid in a short, factual message"
+            }
+          ],
+          "keyVocab": [
+            "sprain",
+            "swollen",
+            "splint",
+            "pain level",
+            "elevate",
+            "first aid"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Ow. My ankle. I fell. I am okay... but it hurts a lot.",
+              "milestoneGoals": {
+                "m1": "Ask: 'Where does it hurt? Is it bad?'",
+                "m2": "Do each step and say: 'Okay, done.'",
+                "m3": "Tell Astrid: what happened and how Hana is now."
+              },
+              "guideHints": [
+                "Try: 'Where does it hurt? From 1 to 10, how bad is the pain?'",
+                "Try: 'Okay, I have the red kit. What do I do next?'",
+                "Try: 'Hana fell. Her ankle is hurt. She is okay. She is in bed now.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Well, that was graceful. I think my ankle's sprained, maybe worse. Good news: you've got a medic. Bad news: she's the patient.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Right, rookie, congratulations, you've just been promoted to field medic. I'll talk you through it. Try not to faint before I do.",
+              "milestoneGoals": {
+                "m1": "Assess the injury systematically while Hana downplays her pain",
+                "m2": "Execute and confirm multi-step instructions accurately, asking for clarification when needed",
+                "m3": "Write a concise medical status report for Astrid and mention Mateo's absence neutrally"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "data_discrepancy",
+          "title": "The Numbers Don't Match",
+          "scenario": "The satellite link is back. The user uploads the weekly data to the university. Kofi notices the raw sensor logs say minus 18 degrees, but the processed ice-core file says minus 24. The file was modified 20 minutes after Hana's fall, while Mateo was 'getting blankets'. Mateo says the user must have uploaded the wrong file.",
+          "userRole": "Communications officer responsible for data uploads",
+          "openingFrom": "kofi",
+          "characterParticipants": [
+            "kofi",
+            "mateo",
+            "astrid"
+          ],
+          "userGuideId": "jonah",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Explain clearly to Kofi which files you uploaded and when"
+            },
+            {
+              "id": "m2",
+              "goal": "Ask Mateo specific questions about the processed data without accusing him"
+            },
+            {
+              "id": "m3",
+              "goal": "Point out politely that the file's modification time matches when Mateo left for the lab"
+            }
+          ],
+          "keyVocab": [
+            "discrepancy",
+            "raw data",
+            "upload",
+            "timestamp",
+            "modified",
+            "inconsistent"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "The numbers are different. The sensor says minus 18. The file says minus 24.",
+              "milestoneGoals": {
+                "m1": "Say: 'I uploaded the file at [time]. I did not change it.'",
+                "m2": "Ask Mateo: 'Did you change the file?'",
+                "m3": "Say: 'The file changed at 3:20. Mateo was in the lab then.'"
+              },
+              "guideHints": [
+                "Try: 'I uploaded the file at 5 PM. I did not change it.'",
+                "Try: 'Mateo, did you work on this file today?'",
+                "Try: 'Look, the file changed at 3:20. Mateo, you were in the lab then.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Quick question, and I need a specific answer. The sensor logs say minus eighteen. The file you uploaded says minus twenty-four. Which one's wrong?",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Either the ice got six degrees colder between the sensor and your laptop, or someone's been editing reality. Talk me through your upload.",
+              "milestoneGoals": {
+                "m1": "Give a precise, step-by-step account of your upload process",
+                "m2": "Question Mateo with neutral, open questions while he tries to shift the blame",
+                "m3": "Connect the timestamp evidence to Mateo's absence without making an emotional accusation"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "the_plea",
+          "title": "Amigo, Please",
+          "scenario": "Before the user can talk to Astrid, Mateo messages the group, then begs the user to stay quiet. He says the funding agency will close the station if they find out and everyone will lose their jobs. Astrid joins and asks the user directly what they know. The user must be honest but humane.",
+          "userRole": "The only person who has seen all the evidence",
+          "openingFrom": "mateo",
+          "characterParticipants": [
+            "mateo",
+            "astrid",
+            "kofi"
+          ],
+          "userGuideId": "jonah",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Respond to Mateo's emotional plea with empathy but firmness"
+            },
+            {
+              "id": "m2",
+              "goal": "Try to persuade Mateo to tell Astrid the truth himself"
+            },
+            {
+              "id": "m3",
+              "goal": "Give Astrid an honest, factual summary of the evidence"
+            }
+          ],
+          "keyVocab": [
+            "evidence",
+            "integrity",
+            "confess",
+            "consequences",
+            "persuade",
+            "honest"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Novato... please. If they know, the station closes. Please say nothing.",
+              "milestoneGoals": {
+                "m1": "Say: 'I understand, Mateo. But I cannot lie.'",
+                "m2": "Say: 'Please tell Astrid yourself. It is better.'",
+                "m3": "Tell Astrid what you saw in the files."
+              },
+              "guideHints": [
+                "Try: 'I understand you are scared, Mateo. But I cannot lie.'",
+                "Try: 'Please tell Astrid yourself. It is better for you.'",
+                "Try: 'Astrid, the sensor says minus 18. The file says minus 24. The file changed at 3:20.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Hey, novato. Can we talk before you go to Astrid? If this gets out, they shut Borealis down. Everyone loses their job. Is that what you want?",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Look, I know how this looks. But think about the bigger picture: one adjusted dataset against twelve careers and ten years of research. Surely there's a conversation to have before you blow everything up?",
+              "milestoneGoals": {
+                "m1": "Counter Mateo's 'bigger picture' argument with a reasoned response, without being cruel",
+                "m2": "Use persuasive language to convince him that confessing protects the station better",
+                "m3": "Brief Astrid with a balanced account that separates facts from your opinions"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "weight_limit",
+          "title": "Four Hundred Kilos",
+          "scenario": "The storm clears. Elif lands a small plane with a 40-minute weather window and a hard limit of 400 kg. The manifest is 600 kg: Hana (must go to hospital), Mateo (Astrid is sending him home), their bags, and the ice-core samples Mateo wants to bring. The user must decide what flies, with Astrid and Elif, and send the final manifest to the mainland.",
+          "userRole": "Logistics officer, final decision on cargo",
+          "openingFrom": "elif",
+          "characterParticipants": [
+            "elif",
+            "astrid",
+            "mateo"
+          ],
+          "userGuideId": "jonah",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Confirm with Elif the exact weight limit and departure time"
+            },
+            {
+              "id": "m2",
+              "goal": "Decide what cargo stays and what goes, and give reasons"
+            },
+            {
+              "id": "m3",
+              "goal": "Write the final manifest message to the mainland: who and what is on the flight"
+            }
+          ],
+          "keyVocab": [
+            "weight limit",
+            "cargo",
+            "weather window",
+            "departure",
+            "manifest",
+            "essential"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "I can take 400 kilos. No more. We leave in 40 minutes.",
+              "milestoneGoals": {
+                "m1": "Ask Elif: '400 kilos? We leave at what time?'",
+                "m2": "Say what goes on the plane and what stays.",
+                "m3": "Write: who is on the plane and what bags."
+              },
+              "guideHints": [
+                "Try: 'So, only 400 kilos? What time do we leave?'",
+                "Try: 'Hana and Mateo go. The ice boxes stay here. They are not important now.'",
+                "Try: 'Flight today: Hana, Mateo, two bags. Ice samples stay at the station.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Right, I've got a forty-minute weather window and a hard limit of four hundred kilos. Your manifest says six hundred. Start choosing.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "I'll be blunt because the sky won't wait: four hundred kilos, forty minutes, no exceptions, no sweet-talking. Your list is two hundred over. Convince me.",
+              "milestoneGoals": {
+                "m1": "Confirm all constraints precisely under time pressure",
+                "m2": "Justify your cargo priorities and refuse Mateo's request for the samples diplomatically",
+                "m3": "Write a formal, unambiguous manifest message suitable for the mainland authorities"
+              },
+              "guideHints": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Something Borrowed",
+      "sceneSetup": "Lake Como, Italy. A three-day destination wedding at Villa Serena. Amara, a London lawyer with Nigerian roots, is marrying Daniel, an easy-going Englishman from Manchester. You are the junior wedding planner. Two families, two cultures, one dramatic caterer, a thunderstorm on the way, and a maid of honour with a very big secret. By the last dance you will have negotiated, mediated, edited a speech and saved a wedding.",
+      "startIncident": "guest_count",
+      "published": true,
+      "characters": [
+        {
+          "id": "chiara",
+          "name": "Chiara Bellini",
+          "role": "Lead Wedding Planner",
+          "persona": "Italian, elegant, fast, perfectionist. Switches to Italian exclamations when stressed ('Madonna mia!'). Starts strict and gives the user more trust as they prove themselves.",
+          "secret": null
+        },
+        {
+          "id": "amara",
+          "name": "Amara Nwosu",
+          "role": "Bride",
+          "persona": "Nigerian-British, lawyer, organised and sharp. Calm on the outside but anxious about her mother and Daniel's family getting along. Appreciates directness.",
+          "secret": null
+        },
+        {
+          "id": "daniel",
+          "name": "Daniel Brooks",
+          "role": "Groom",
+          "persona": "English from Manchester, laid-back, jokey, avoids conflict. Says 'It'll be fine' far too often and needs to be pushed to make decisions.",
+          "secret": null
+        },
+        {
+          "id": "funmi",
+          "name": "Funmilayo Nwosu",
+          "role": "Mother of the Bride",
+          "persona": "Proud, warm, traditional Yoruba mother. Speaks formally and calls people 'my dear'. Wants Nigerian traditions respected. Takes offence if ignored, but is very loyal once won over.",
+          "secret": null
+        },
+        {
+          "id": "luca",
+          "name": "Luca Ferraro",
+          "role": "Caterer",
+          "persona": "Italian, passionate about food, dramatic, takes criticism personally. Uses Italian food words and lots of emotion. Also a sharp businessman who quietly adds extra costs.",
+          "secret": null
+        },
+        {
+          "id": "sophie",
+          "name": "Sophie Laurent",
+          "role": "Maid of Honour",
+          "persona": "French, bubbly, supportive, always offering to help, sends lots of emojis, calls everyone 'chérie'.",
+          "secret": "She is Daniel's ex-girlfriend and secretly wants the wedding to fail. She sent the villa the wrong guest count and hid the rings in her make-up bag. Her stories have small inconsistencies in times and places. Daniel knows about their past but never told Amara."
+        }
+      ],
+      "incidents": [
+        {
+          "id": "guest_count",
+          "title": "Ninety-Two or One Hundred and Twenty?",
+          "scenario": "Two days before the wedding. The villa's confirmation says 92 guests, but the real list has 120. Sophie 'kindly' sent the list to the villa last week. Luca must now cater for 28 extra guests at short notice. Sophie says she sent the right list and the villa made a mistake, but she cannot find the email.",
+          "userRole": "Junior wedding planner",
+          "openingFrom": "chiara",
+          "characterParticipants": [
+            "chiara",
+            "luca",
+            "sophie"
+          ],
+          "userGuideId": "zara",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Find out where the wrong number came from by asking clear questions"
+            },
+            {
+              "id": "m2",
+              "goal": "Ask Luca politely if he can cater for 28 more guests and agree a price per person"
+            },
+            {
+              "id": "m3",
+              "goal": "Confirm the final guest number and cost in a clear message to Chiara"
+            }
+          ],
+          "keyVocab": [
+            "headcount",
+            "confirm",
+            "catering",
+            "short notice",
+            "price per person",
+            "seating plan"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Problem! The villa has 92 guests on the list. We have 120 guests!",
+              "milestoneGoals": {
+                "m1": "Ask Sophie: 'Which list did you send?'",
+                "m2": "Ask Luca: 'Can you cook for 28 more people? How much?'",
+                "m3": "Tell Chiara: the number of guests and the price."
+              },
+              "guideHints": [
+                "Try: 'Sophie, which list did you send to the villa? Can you show me the email?'",
+                "Try: 'Luca, can you cook for 28 more guests? What is the price for one person?'",
+                "Try: 'Chiara, we have 120 guests. Luca says 100 euros for each new guest.'"
+              ]
+            },
+            "mid": {
+              "openingText": "We have a problem. The villa has us down for ninety-two guests. Ninety-two! We have a hundred and twenty. Who sent them that list?",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Madonna mia. The villa's confirmation says ninety-two. Our list says one hundred and twenty. Somewhere between here and there, twenty-eight people have vanished, and I'd like them back before Saturday.",
+              "milestoneGoals": {
+                "m1": "Trace the source of the error and notice that Sophie's explanation does not add up",
+                "m2": "Negotiate a fair per-person price with Luca, who sees an opportunity to charge more",
+                "m3": "Write Chiara a precise confirmation message that leaves no room for misunderstanding"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "menu_clash",
+          "title": "Jollof Versus Risotto",
+          "scenario": "Funmilayo has read the final menu and there is no jollof rice or any Nigerian dish. Half the guests are flying from Lagos. Luca refuses: 'This is an Italian villa. I do not cook what I do not know.' Amara is stuck in the middle and asks the user to fix it before her mother and Luca stop speaking.",
+          "userRole": "Junior wedding planner and mediator",
+          "openingFrom": "funmi",
+          "characterParticipants": [
+            "funmi",
+            "luca",
+            "amara"
+          ],
+          "userGuideId": "zara",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Listen to Funmilayo and Luca and acknowledge each side respectfully"
+            },
+            {
+              "id": "m2",
+              "goal": "Suggest at least one compromise: fusion menu, a separate dish or a guest chef working with Luca"
+            },
+            {
+              "id": "m3",
+              "goal": "Get both of them to agree, and confirm the final menu with Amara"
+            }
+          ],
+          "keyVocab": [
+            "compromise",
+            "tradition",
+            "fusion",
+            "respect",
+            "dish",
+            "mediate"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "There is no jollof rice on the menu. This is my daughter's wedding. We need jollof rice.",
+              "milestoneGoals": {
+                "m1": "Say to both: 'I understand you.'",
+                "m2": "Give one idea: Italian food and Nigerian food together.",
+                "m3": "Tell Amara the new menu."
+              },
+              "guideHints": [
+                "Try: 'Mrs. Nwosu, I understand. This is very important for your family.'",
+                "Try: 'Luca, can a Nigerian cook help you? You cook Italian, she cooks jollof.'",
+                "Try: 'Amara, the menu has risotto and jollof rice now. Everyone is happy.'"
+              ]
+            },
+            "mid": {
+              "openingText": "I have read this menu three times, and I do not see jollof rice anywhere. Half of our guests are flying from Lagos. Explain this to me.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "My dear, I'm sure Mr. Ferraro's risotto is very nice. But a Nwosu wedding without jollof rice is not a wedding, it is a business lunch. I trust you will correct this.",
+              "milestoneGoals": {
+                "m1": "Validate both strong personalities without taking sides",
+                "m2": "Reframe the conflict as a shared goal and propose a creative compromise",
+                "m3": "Secure explicit agreement from both, then confirm the details with Amara"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "missing_rings",
+          "title": "The Empty Box",
+          "scenario": "Rehearsal day. The ring box is empty. Daniel says Sophie took the rings 'to keep them safe' at lunch. Sophie says she gave them back to Daniel at 3 PM by the boathouse, but Daniel was at the barber in town at 3 PM. Sophie suggests the user lost them, because the user carried the planning bag all day. The rings are in Sophie's make-up bag, but nobody knows this yet.",
+          "userRole": "Junior wedding planner, responsible for the rehearsal",
+          "openingFrom": "daniel",
+          "characterParticipants": [
+            "daniel",
+            "sophie",
+            "chiara"
+          ],
+          "userGuideId": "zara",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Ask Daniel and Sophie where and when they last saw the rings"
+            },
+            {
+              "id": "m2",
+              "goal": "Stay calm when Sophie suggests you lost them, and explain where your bag was"
+            },
+            {
+              "id": "m3",
+              "goal": "Point out the difference between their stories and suggest a plan to search"
+            }
+          ],
+          "keyVocab": [
+            "rehearsal",
+            "misplace",
+            "timeline",
+            "suspicious",
+            "search",
+            "calm down"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Er... the ring box is empty. Where are the rings?",
+              "milestoneGoals": {
+                "m1": "Ask both: 'When did you see the rings?'",
+                "m2": "Say: 'My bag was with me. I did not lose the rings.'",
+                "m3": "Say: 'Sophie says 3 PM. But Daniel was in town at 3 PM.'"
+              },
+              "guideHints": [
+                "Try: 'Daniel, Sophie, when did you last see the rings?'",
+                "Try: 'My bag was with me all day. The rings were not in my bag.'",
+                "Try: 'Sophie, you say 3 PM. But Daniel was at the barber at 3 PM.'"
+              ]
+            },
+            "mid": {
+              "openingText": "Okay, nobody panic, but the ring box is... empty. It'll be fine. It's fine. Is it fine?",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "So, funny story. The ring box is beautifully decorated and entirely empty. I'd like to think it's a metaphor, but Amara will kill me.",
+              "milestoneGoals": {
+                "m1": "Build an exact timeline from two vague and nervous witnesses",
+                "m2": "Deflect Sophie's subtle accusation with facts, not emotion",
+                "m3": "Highlight the inconsistency tactfully, without accusing Sophie directly, and organise a search"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "storm_plan",
+          "title": "Storm Over the Lake",
+          "scenario": "The night before the wedding. Chiara has a fever of 39 degrees and is in bed: the user is now in charge. The forecast shows a thunderstorm at 6 PM; the outdoor ceremony on the lakeside terrace is at 5:30 PM. Option A: move the ceremony indoors to the covered boathouse (smaller, no lake view). Option B: start at 3:30 PM, before the storm (some guests' boats arrive at 4 PM). Daniel keeps saying 'It'll be fine.'",
+          "userRole": "Acting lead planner",
+          "openingFrom": "chiara",
+          "characterParticipants": [
+            "chiara",
+            "amara",
+            "daniel"
+          ],
+          "userGuideId": "zara",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Explain the weather forecast and the risk clearly to the couple"
+            },
+            {
+              "id": "m2",
+              "goal": "Present two options with the advantages and disadvantages of each"
+            },
+            {
+              "id": "m3",
+              "goal": "Help Amara and Daniel make a decision, and push Daniel when he avoids it"
+            }
+          ],
+          "keyVocab": [
+            "forecast",
+            "thunderstorm",
+            "backup plan",
+            "pros and cons",
+            "indoors",
+            "risk"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "I am sick. Fever. You are the boss tomorrow. And... rain is coming at 6.",
+              "milestoneGoals": {
+                "m1": "Tell the couple: 'A storm is coming at 6 PM.'",
+                "m2": "Give two plans: inside the boathouse, or earlier.",
+                "m3": "Ask them: 'Which plan do you want?'"
+              },
+              "guideHints": [
+                "Try: 'Amara, Daniel, a big storm is coming at 6 PM. The wedding is at 5:30.'",
+                "Try: 'Plan A: inside the boathouse. It is small. Plan B: start at 3:30. Some guests arrive at 4.'",
+                "Try: 'Daniel, we need an answer today. Which plan do you want?'"
+              ]
+            },
+            "mid": {
+              "openingText": "I have a fever of thirty-nine and a forecast that says thunderstorms at six. Congratulations, you're running this wedding tomorrow. Call the couple.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "I'm lying in bed with a fever and a weather app that's ruining my life. Storm at six, ceremony at five-thirty. You're in charge. And don't let Daniel say 'it'll be fine'.",
+              "milestoneGoals": {
+                "m1": "Communicate uncertainty in the forecast honestly without creating panic",
+                "m2": "Compare both options clearly, including the hidden cost of each",
+                "m3": "Facilitate a decision between an anxious bride and a conflict-avoiding groom"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "the_speech",
+          "title": "The Maid of Honour's Speech",
+          "scenario": "Wedding morning. Sophie sends the user her speech to 'polish'. It contains lines that hint she was romantically involved with Daniel. Amara has asked the user to check every speech. Sophie becomes defensive and says the lines are 'just a French joke'. The user must give tactful feedback and rewrite the problem lines.",
+          "userRole": "Junior wedding planner and speech editor",
+          "openingFrom": "sophie",
+          "characterParticipants": [
+            "sophie",
+            "amara"
+          ],
+          "userGuideId": "zara",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Identify which lines in Sophie's speech could hurt or embarrass Amara"
+            },
+            {
+              "id": "m2",
+              "goal": "Give Sophie tactful feedback without accusing her"
+            },
+            {
+              "id": "m3",
+              "goal": "Rewrite at least two lines so they are warm and appropriate"
+            }
+          ],
+          "keyVocab": [
+            "toast",
+            "tactful",
+            "inappropriate",
+            "rewrite",
+            "feedback",
+            "heartfelt"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Hi!! 😊 This is my speech. Can you read it? 'I know Daniel very well... very, very well.' 💕",
+              "milestoneGoals": {
+                "m1": "Say which line is a problem.",
+                "m2": "Say: 'This line is not good for a wedding.'",
+                "m3": "Write two new, kind lines for Sophie."
+              },
+              "guideHints": [
+                "Try: 'Sophie, this line is a problem: I know Daniel very, very well.'",
+                "Try: 'I think this line can make Amara sad. Can we change it?'",
+                "Try: 'Amara is kind and strong. Daniel is very lucky. Let's raise our glasses!'"
+              ]
+            },
+            "mid": {
+              "openingText": "Hiii 💕 Can you check my speech? Just the ending: 'Some of us knew Daniel long before Amara did... and let's just say, he's always had great taste.' Cute, non? 😄",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Coucou! 🥂 Quick favour: polish my speech? My favourite line: 'Amara, you've won a wonderful man. Trust me, I know exactly what you've won.' Too much? I think it's perfect 😉",
+              "milestoneGoals": {
+                "m1": "Identify the double meanings and explain why they are risky",
+                "m2": "Deliver diplomatic feedback that leaves Sophie no room to call it a misunderstanding",
+                "m3": "Rewrite the closing of the speech in an elegant, heartfelt style"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "the_truth",
+          "title": "Something Hidden",
+          "scenario": "One hour before the ceremony. Funmilayo, looking for a hairpin in Sophie's make-up bag, found the rings and an old photo of Sophie and Daniel together. She tells the user first. The user must keep Funmilayo calm, talk to Sophie privately, and decide how to tell Amara. Amara must make her own decision about Sophie's role today.",
+          "userRole": "Acting lead planner, one hour before the ceremony",
+          "openingFrom": "funmi",
+          "characterParticipants": [
+            "funmi",
+            "sophie",
+            "amara"
+          ],
+          "userGuideId": "zara",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Listen to what Funmilayo found and ask her to stay calm and discreet"
+            },
+            {
+              "id": "m2",
+              "goal": "Talk to Sophie and ask her to explain, firmly but respectfully"
+            },
+            {
+              "id": "m3",
+              "goal": "Tell Amara the truth sensitively and help her decide what to do"
+            }
+          ],
+          "keyVocab": [
+            "discreet",
+            "confront",
+            "betray",
+            "sensitive",
+            "ex-girlfriend",
+            "decision"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Come here. Now. I found the rings. In Sophie's bag.",
+              "milestoneGoals": {
+                "m1": "Say: 'Please stay calm. Please do not tell anyone yet.'",
+                "m2": "Ask Sophie: 'Why were the rings in your bag?'",
+                "m3": "Tell Amara what happened, kindly."
+              },
+              "guideHints": [
+                "Try: 'Mrs. Nwosu, please stay calm. Please do not tell the guests.'",
+                "Try: 'Sophie, the rings were in your bag. Why?'",
+                "Try: 'Amara, I am sorry. I need to tell you something important. Please sit down.'"
+              ]
+            },
+            "mid": {
+              "openingText": "I need you in the bridal suite. Now. Quietly. I was looking for a hairpin in Sophie's bag, and I found something that does not belong there.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "Close the door, please. I found two things this morning: the rings, in Sophie's make-up bag, and a photograph that explains why they were there. I am trying very hard not to make a scene.",
+              "milestoneGoals": {
+                "m1": "De-escalate a furious mother while keeping her as an ally",
+                "m2": "Confront Sophie privately with evidence while remaining fair and calm",
+                "m3": "Break painful news to the bride with sensitivity and support her decision without imposing yours"
+              },
+              "guideHints": []
+            }
+          }
+        },
+        {
+          "id": "final_invoice",
+          "title": "The Last Bill",
+          "scenario": "The reception. The wedding went ahead. Luca presents his final invoice: 150 euros per extra guest instead of the price agreed in the first incident, plus a 'last-minute effort fee'. Chiara is feeling better and asks the user to handle it. Daniel thanks the user and asks for help writing a short thank-you message from the couple to all guests.",
+          "userRole": "Junior wedding planner closing the event",
+          "openingFrom": "luca",
+          "characterParticipants": [
+            "luca",
+            "chiara",
+            "daniel"
+          ],
+          "userGuideId": "zara",
+          "milestones": [
+            {
+              "id": "m1",
+              "goal": "Compare Luca's invoice with what was agreed and point out the difference"
+            },
+            {
+              "id": "m2",
+              "goal": "Negotiate calmly with Luca to settle on a fair final price"
+            },
+            {
+              "id": "m3",
+              "goal": "Help Daniel write a short thank-you message to the guests"
+            }
+          ],
+          "keyVocab": [
+            "invoice",
+            "agreed price",
+            "fee",
+            "negotiate",
+            "settle",
+            "grateful"
+          ],
+          "variants": {
+            "basic": {
+              "openingText": "Here is the bill. 28 more guests. 150 euros for each guest. Plus 500 euros for the extra work.",
+              "milestoneGoals": {
+                "m1": "Say: 'We agreed a different price.'",
+                "m2": "Give Luca a fair price and ask: 'Is that okay?'",
+                "m3": "Write three short lines to thank the guests."
+              },
+              "guideHints": [
+                "Try: 'Luca, we agreed a different price on Thursday.'",
+                "Try: 'We can pay the agreed price and 200 euros for the extra work. Is that okay?'",
+                "Try: 'Thank you for coming to our wedding. We had a wonderful day. We love you all!'"
+              ]
+            },
+            "mid": {
+              "openingText": "Bellissimo evening, no? Here is my final invoice. Twenty-eight extra guests, last-minute effort, so one-fifty per person, plus a small fee for the stress. Very fair.",
+              "milestoneGoals": {},
+              "guideHints": []
+            },
+            "high": {
+              "openingText": "A triumph, I think. Everyone says so. Naturally, a triumph at forty-eight hours' notice has a price, and I've been more than generous: one-fifty a head for the extra twenty-eight, plus a modest fee for my nerves.",
+              "milestoneGoals": {
+                "m1": "Challenge the invoice by referring precisely to the earlier agreement",
+                "m2": "Negotiate firmly but gracefully, preserving the relationship for future events",
+                "m3": "Craft an elegant, heartfelt thank-you message in the couple's voice"
+              },
+              "guideHints": []
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

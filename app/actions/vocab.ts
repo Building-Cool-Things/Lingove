@@ -4,7 +4,27 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
+import { UserProfile } from "@/models/user-profile";
 import { VocabularyModel, type Vocabulary } from "@/models/vocab";
+
+const PARTS_OF_SPEECH = ["NOUN", "VERB", "ADJECTIVE", "ADVERB", "PRONOUN", "PREPOSITION", "CONJUNCTION", "INTERJECTION"];
+
+// Reading session "Save word": adds the word to the shared word bank. A word that is already there is left alone.
+export async function saveWord(w: { word: string; meaning: string; translation: string; pronunciation: string; partOfSpeech: string; example: string }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Unauthorized");
+  await connectDB();
+
+  const profile = await UserProfile.findOne({ authUserId: session.user.id }).lean();
+  const word = w.word.toLowerCase();
+  const partOfSpeech = PARTS_OF_SPEECH.includes(w.partOfSpeech?.toUpperCase()) ? w.partOfSpeech.toUpperCase() : "NOUN";
+  await VocabularyModel.updateOne(
+    { word },
+    { $setOnInsert: { word, level: profile?.currentLevel ?? "A2", difficulty: "MEDIUM", partOfSpeech, meaning: w.meaning, pronunciation: w.pronunciation, examples: [w.example] } },
+    { upsert: true },
+  );
+  return { ok: true };
+}
 
 export type VocabCard = {
   id: string;

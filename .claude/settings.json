@@ -11,9 +11,7 @@
       "Read(//c/Users/asfak/AppData/Local/npm-cache/_logs/**)",
       "Bash(mkdir -p \"d:/2024/english-practice/app/\\(practice\\)/dashboard/reading/analysis/[id]\")",
       "Bash(node -e ' *)",
-      "Bash(curl -s -H \"Authorization: Bearer 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\" \"https://openrouter.ai/api/v1/models\")",
-      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\); d.data.slice\\(0,40\\).forEach\\(m=>console.log\\(m.id\\)\\)\")",
-      "PowerShell($r = Invoke-RestMethod -Uri \"https://openrouter.ai/api/v1/models\" -Headers @{Authorization=\"Bearer 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\"}; $r.data | Select-Object -First 50 | ForEach-Object { $_.id })"
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\); d.data.slice\\(0,40\\).forEach\\(m=>console.log\\(m.id\\)\\)\")"
     ],
     "additionalDirectories": [
       "d:\\2024\\english-practice\\app\\(practice)\\dashboard\\writing\\analysis",

@@ -2,33 +2,13 @@
 
 import { headers } from "next/headers";
 
-import { jsonrepair } from "jsonrepair";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { chat, MODELS } from "@/lib/openrouter";
-import { UserProfile, type UserProfileDocument } from "@/lib/user-profile";
-import { WritingModel, type Writing } from "@/models/writing";
+import { chat, parseJson } from "@/lib/ai";
+import { UserProfile, type UserProfileDocument } from "@/models/user-profile";
+import { LEVEL_LABELS, WORD_LIMITS, WRITING_XP } from "@/lib/skill-config";
+import { WritingModel, type Writing, type WritingCorrection } from "@/models/writing";
 import { VocabularyModel } from "@/models/vocab";
-
-// ── Robust JSON parser for LLM output ────────────────────────────────────────
-function repairParseJson(raw: string): unknown {
-  let s = raw
-    .replace(/^```(?:json)?[\r\n]*/im, "")
-    .replace(/[\r\n]*```\s*$/m, "")
-    .trim();
-
-  const a = s.indexOf("{");
-  const b = s.lastIndexOf("}");
-  if (a >= 0 && b > a) s = s.slice(a, b + 1);
-
-  try { return JSON.parse(s); } catch { /* fall through */ }
-
-  try {
-    return JSON.parse(jsonrepair(s));
-  } catch (e) {
-    throw new Error(`JSON repair failed: ${(e as Error).message}\n\nRaw snippet: ${s.slice(0, 300)}`);
-  }
-}
 
 async function getCurrentUser() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -135,17 +115,6 @@ function resolveTopic(recentTopics: string[], interests: string[]): string {
   return final[Math.floor(Math.random() * final.length)];
 }
 
-const WORD_LIMITS = {
-  EASY: { range: "100-150 words", min: 100, recommended: 130, max: 150 },
-  MEDIUM: { range: "150-220 words", min: 150, recommended: 190, max: 220 },
-  HARD: { range: "220-300 words", min: 220, recommended: 260, max: 300 },
-};
-
-const LEVEL_LABELS = {
-  EASY: "A2-B1",
-  MEDIUM: "B1-B2",
-  HARD: "C1-C2",
-};
 
 const DIFFICULTY_GUIDE = {
   EASY: `
@@ -231,15 +200,10 @@ Return ONLY this JSON (all fields required):
 }`,
       },
     ],
-    { model: MODELS.default, temperature: 0.8, maxTokens: 600 },
+    { temperature: 0.8, maxTokens: 600 },
   );
 
-  const cleaned = reply
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "")
-    .trim();
-
-  const parsed = JSON.parse(cleaned);
+  const parsed = parseJson(reply) as Omit<WritingQuestion, "topic" | "difficulty" | "level" | "targetWords">;
 
   await UserProfile.findOneAndUpdate(
     { authUserId: user.id },
@@ -264,7 +228,7 @@ Return ONLY this JSON (all fields required):
     minWords: parsed.minWords ?? words.min,
     recommendedWords: parsed.recommendedWords ?? words.recommended,
     maxWords: parsed.maxWords ?? words.max,
-    tips: parsed.tips,
+    tips: parsed.tips ?? [],
     level,
     targetWords: words.range,
   };
@@ -308,6 +272,7 @@ type AnalysisResult = {
   generalFeedback: string | null;
   improvementPlan: string[];
   vocabulary: Record<string, unknown>[];
+  corrections?: WritingCorrection[];
 };
 
 const getAnalysis = async (
@@ -369,6 +334,16 @@ Return ONLY this JSON:
     "Specific thing to improve next time 2",
     "Specific thing to improve next time 3"
   ],
+  "corrections": [
+    {
+      "sentence": 0,
+      "type": "grammar | spelling | punctuation | clarity | structure",
+      "rule": "short rule name, e.g. subject-verb agreement, articles, capital letters, linking words",
+      "find": "the exact wrong words copied character-for-character from the learner's essay (as short as possible)",
+      "replace": "the corrected words that replace \\"find\\"",
+      "why": "one short sentence explaining the rule"
+    }
+  ],
   "vocabulary": [
     {
       "word": "example",
@@ -388,13 +363,12 @@ Return ONLY this JSON:
 }`,
       },
     ],
-    { model: MODELS.default, temperature: 0.8 },
+    { temperature: 0.8 },
   );
 
-  return repairParseJson(reply) as AnalysisResult;
+  return parseJson(reply) as AnalysisResult;
 };
 
-const XP_BY_DIFFICULTY = { EASY: 40, MEDIUM: 80, HARD: 120 } as const;
 
 export async function submitWriting(
   question: WritingQuestion,
@@ -422,6 +396,7 @@ export async function submitWriting(
       idealAnswer: analysis.idealAnswer,
       generalFeedback: analysis.generalFeedback,
       improvementPlan: analysis.improvementPlan,
+      corrections: (analysis.corrections ?? []).filter((c) => c?.find && draft.includes(c.find)),
       analysisStatus: "COMPLETED",
     });
     if (analysis.vocabulary?.length) {
@@ -444,7 +419,7 @@ export async function submitWriting(
       Math.round((1 - errorCount / Math.max(1, totalSentences)) * 10),
     ));
 
-    const xpGained = XP_BY_DIFFICULTY[question.difficulty];
+    const xpGained = WRITING_XP[question.difficulty];
 
     // Streak: same calendar day → keep, yesterday → extend, older → reset
     const now = new Date();
@@ -526,6 +501,7 @@ export type WritingView = {
   idealAnswer: string | null;
   generalFeedback: string | null;
   improvementPlan: string[];
+  corrections: WritingCorrection[];
   createdAt: string;
 };
 
@@ -548,6 +524,7 @@ function serializeWriting(doc: Writing): WritingView {
     idealAnswer: doc.idealAnswer ?? null,
     generalFeedback: doc.generalFeedback ?? null,
     improvementPlan: doc.improvementPlan ?? [],
+    corrections: (doc.corrections ?? []).map((c) => ({ sentence: c.sentence, type: c.type, rule: c.rule, find: c.find, replace: c.replace, why: c.why })),
     createdAt: doc.createdAt?.toISOString() ?? new Date().toISOString(),
   };
 }
@@ -563,4 +540,16 @@ export async function getSubmission(id: string): Promise<WritingView | null> {
 
 export async function getOrGenerateAnalysis(id: string): Promise<WritingView | null> {
   return getSubmission(id);
+}
+
+// Lingov writing session: save and analyse, then return the analysis and the XP earned.
+export async function submitWritingSession(
+  question: WritingQuestion,
+  draft: string,
+  wordCount: number,
+): Promise<{ view: WritingView; xp: number }> {
+  const id = await submitWriting(question, draft, wordCount);
+  const view = await getSubmission(id);
+  if (!view || view.analysisStatus !== "COMPLETED") throw new Error("We could not check your writing. Please try again.");
+  return { view, xp: WRITING_XP[question.difficulty] };
 }

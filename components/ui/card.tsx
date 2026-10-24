@@ -5,14 +5,17 @@ import { cn } from "@/lib/utils"
 function Card({
   className,
   size = "default",
+  interactive = false,
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: React.ComponentProps<"div"> & { size?: "default" | "sm"; interactive?: boolean }) {
   return (
     <div
       data-slot="card"
       data-size={size}
+      data-interactive={interactive || undefined}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        interactive && "cursor-pointer transition-[background-color,transform] duration-150 ease-out hover:-translate-y-0.5 hover:bg-muted",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-[22px] border border-border bg-card py-(--card-spacing) text-sm text-card-foreground [--card-spacing:--spacing(5)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-[22px] *:[img:last-child]:rounded-b-[22px]",
         className
       )}
       {...props}
@@ -38,7 +41,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-title"
       className={cn(
-        "font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm",
+        "font-heading text-xl leading-[1.25] font-bold group-data-[size=sm]/card:text-sm",
         className
       )}
       {...props}
@@ -84,7 +87,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-b-xl border-t bg-muted/50 p-(--card-spacing)",
+        "flex items-center rounded-b-xl border-t bg-muted p-(--card-spacing)",
         className
       )}
       {...props}

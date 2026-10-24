@@ -49,7 +49,7 @@ function QuestionItem({
       <div className="mb-3 flex items-start gap-3">
         <span
           className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black",
+            "flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
             answered
               ? "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400"
               : "bg-muted text-muted-foreground"
@@ -78,9 +78,9 @@ function QuestionItem({
               >
                 <span
                   className={cn(
-                    "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border text-[9px] font-black",
+                    "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold",
                     selected
-                      ? "border-teal-500 bg-teal-500 text-white"
+                      ? "border-teal-400 bg-teal-400 text-[#0D0F0E]"
                       : "border-muted-foreground/30 text-muted-foreground"
                   )}
                 >
@@ -165,7 +165,7 @@ function AnswerProgress({
       <div className="flex justify-between text-xs">
         <span
           className={cn(
-            "font-semibold tabular-nums",
+            "font-bold tabular-nums",
             done
               ? "text-teal-600 dark:text-teal-400"
               : "text-muted-foreground"
@@ -268,7 +268,7 @@ export default function ReadingPracticePage() {
             <span className="text-muted-foreground/40">·</span>
             <span
               className={cn(
-                "shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+                "shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-bold",
                 DIFFICULTY_STYLE[diff]
               )}
             >
@@ -297,7 +297,7 @@ export default function ReadingPracticePage() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left — passage panel (desktop) */}
-        <div className="hidden w-[48%] shrink-0 flex-col overflow-y-auto border-r border-teal-100 bg-teal-50/60 px-7 py-8 dark:border-teal-900/40 dark:bg-teal-950/20 lg:flex xl:px-10">
+        <div className="hidden w-[48%] shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-7 py-8 lg:flex xl:px-10">
           <p className="text-[11px] font-bold uppercase tracking-widest text-teal-400 dark:text-teal-500">
             Reading Passage
           </p>
@@ -307,21 +307,21 @@ export default function ReadingPracticePage() {
               {[1, 0.9, 0.75, 1, 0.85, 0.6, 1, 0.8, 0.7].map((w, i) => (
                 <div
                   key={i}
-                  className="h-4 animate-pulse rounded-md bg-teal-100 dark:bg-teal-900/40"
+                  className="h-4 animate-pulse rounded-md bg-muted"
                   style={{ width: `${w * 100}%` }}
                 />
               ))}
             </div>
           ) : (
             <>
-              <h2 className="mt-4 text-lg font-bold tracking-tight text-teal-950 dark:text-teal-50">
+              <h2 className="mt-4 text-lg font-bold tracking-tight text-foreground">
                 {task?.title}
               </h2>
               <div className="mt-4 space-y-4">
                 {(task?.passage ?? "").split("\n\n").map((para, i) => (
                   <p
                     key={i}
-                    className="text-[15px] leading-8 tracking-tight text-teal-900 dark:text-teal-100"
+                    className="text-[15px] leading-8 tracking-tight text-foreground"
                   >
                     {para}
                   </p>
@@ -331,12 +331,12 @@ export default function ReadingPracticePage() {
               {/* Tips */}
               {task?.tips && task.tips.length > 0 && (
                 <div className="mt-8 rounded-xl border border-teal-200 bg-teal-100/60 p-4 dark:border-teal-800 dark:bg-teal-900/30">
-                  <p className="mb-2.5 text-[10px] font-black uppercase tracking-widest text-teal-500 dark:text-teal-400">
+                  <p className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-teal-500 dark:text-teal-400">
                     Reading Tips
                   </p>
                   <ul className="space-y-1.5">
                     {task.tips.map((tip, i) => (
-                      <li key={i} className="flex items-start gap-2 text-xs leading-5 text-teal-800 dark:text-teal-200">
+                      <li key={i} className="flex items-start gap-2 text-xs leading-5 text-foreground">
                         <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-teal-200 text-[9px] font-bold text-teal-700 dark:bg-teal-800 dark:text-teal-300">
                           {i + 1}
                         </span>
@@ -356,7 +356,7 @@ export default function ReadingPracticePage() {
 
             {/* Mobile passage */}
             <details className="mb-6 lg:hidden">
-              <summary className="cursor-pointer rounded-xl border border-teal-200 bg-teal-50/70 px-4 py-3 text-sm font-semibold text-teal-800 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-200">
+              <summary className="cursor-pointer rounded-xl border border-teal-200 bg-teal-50/70 px-4 py-3 text-sm font-bold text-teal-800 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-200">
                 {isLoading ? "Loading passage…" : `Read Passage: ${task?.title ?? ""}`}
               </summary>
               <div className="mt-2 rounded-xl border border-border bg-muted/30 p-4">
@@ -376,7 +376,7 @@ export default function ReadingPracticePage() {
               </div>
             </details>
 
-            <p className="mb-5 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+            <p className="mb-5 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
               {isLoading ? "Loading questions…" : `${totalQuestions} Questions`}
             </p>
 

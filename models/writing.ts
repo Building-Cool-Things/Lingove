@@ -28,6 +28,28 @@ interface IGrammarSummary {
   mostCommonError: string | null;
 }
 
+// Word-level fix: `find` is copied from the learner's text, `replace` corrects it.
+export interface WritingCorrection {
+  sentence: number;
+  type: "grammar" | "spelling" | "punctuation" | "clarity" | "structure" | string;
+  rule: string;
+  find: string;
+  replace: string;
+  why: string;
+}
+
+const CorrectionSchema = new Schema<WritingCorrection>(
+  {
+    sentence: { type: Number, default: 0 },
+    type: { type: String, default: "grammar" },
+    rule: { type: String, default: "" },
+    find: { type: String, required: true },
+    replace: { type: String, default: "" },
+    why: { type: String, default: "" },
+  },
+  { _id: false },
+);
+
 const SentenceAnalysisSchema = new Schema<ISentenceAnalysis>(
   {
     index: { type: Number, required: true },
@@ -92,6 +114,7 @@ export interface Writing extends Document {
   answer:string;
   generalFeedback: string;
   improvementPlan: string[];
+  corrections: WritingCorrection[];
   analysisStatus: "PENDING" | "COMPLETED";
   createdAt: Date;
   updatedAt: Date;
@@ -170,6 +193,7 @@ const WritingSchema = new Schema<Writing>(
     idealAnswer:      { type: String },
     generalFeedback:  { type: String },
     improvementPlan:  { type: [String], default: [] },
+    corrections:      { type: [CorrectionSchema], default: [] },
     analysisStatus:   { type: String, enum: ["PENDING", "COMPLETED"], default: "PENDING" },
   },
   {

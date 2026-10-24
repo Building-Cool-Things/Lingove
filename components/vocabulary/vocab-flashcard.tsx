@@ -2,18 +2,9 @@
 
 import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type { VocabCard } from "@/app/actions/vocab";
-
-const LEVEL_COLORS: Record<string, string> = {
-  A1: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-  A2: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
-  B1: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  B2: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300",
-  C1: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
-  C2: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-};
+import { sectionTitle } from "@/components/page-shell";
+import { cn } from "@/lib/utils";
 
 const POS_LABEL: Record<string, string> = {
   NOUN: "noun",
@@ -26,180 +17,119 @@ const POS_LABEL: Record<string, string> = {
   INTERJECTION: "interj.",
 };
 
+// Status pill colours from the design's "My words" list.
+const STATE = {
+  New: "bg-[#2A2F2D] text-[#52C79A]",
+  Learning: "bg-[#EDBF73]/15 text-[#EDBF73]",
+  Known: "bg-[#212524] text-[#6BD3AB]",
+};
+
+const btn = "h-11 flex-1 rounded-full text-[14.5px] font-bold transition-[transform,background-color] duration-100 active:scale-[.96]";
+
 export function VocabFlashcard({ initial }: { initial: VocabCard[] }) {
   const [queue, setQueue] = useState<VocabCard[]>(initial);
-  const [done, setDone] = useState(0);
+  const [known, setKnown] = useState<Set<string>>(new Set());
+  const [again, setAgain] = useState<Set<string>>(new Set());
   const [flipped, setFlipped] = useState(false);
 
   const total = initial.length;
   const current = queue[0];
 
-  function flip() {
-    setFlipped(true);
-  }
-
-  function gotIt() {
+  function good() {
+    setKnown((k) => new Set(k).add(current.word));
     setQueue((q) => q.slice(1));
-    setDone((d) => d + 1);
     setFlipped(false);
   }
 
-  function again() {
+  function repeat() {
+    setAgain((a) => new Set(a).add(current.word));
     setQueue((q) => [...q.slice(1), q[0]]);
     setFlipped(false);
   }
 
   if (total === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-24 text-center text-muted-foreground">
-        <p className="text-5xl">📚</p>
-        <p className="text-lg font-medium text-foreground">No words yet</p>
-        <p className="text-sm">
-          Complete writing practices to grow your word bank.
-        </p>
-      </div>
+      <span className="text-sm text-muted-foreground">
+        No words yet. Complete writing practices to grow your word bank.
+      </span>
     );
   }
 
-  if (queue.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-        <p className="text-5xl">🎉</p>
-        <p className="text-2xl font-semibold">All done!</p>
-        <p className="text-muted-foreground">
-          You reviewed {total} word{total !== 1 ? "s" : ""}.
-        </p>
-        <Button variant="outline" onClick={() => { setQueue(initial); setDone(0); setFlipped(false); }}>
-          Start over
-        </Button>
-      </div>
-    );
-  }
-
-  const progress = Math.round((done / total) * 100);
+  const state = (w: string) => (known.has(w) ? "Known" : again.has(w) ? "Learning" : "New");
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      {/* Progress */}
-      <div className="w-full max-w-lg">
-        <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
-          <span>{done} / {total} known</span>
-          <span>{queue.length} remaining</span>
+    <>
+      <div className="flex max-w-[520px] flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <span className={sectionTitle}>
+            {queue.length ? `${queue.length} word${queue.length !== 1 ? "s" : ""} to review` : "All done"}
+          </span>
+          <span className="text-[12.5px] tabular-nums text-muted-foreground">
+            {known.size} of {total}
+          </span>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
 
-      {/* Card */}
-      <div
-        className="relative w-full max-w-lg"
-        style={{ perspective: "1200px" }}
-      >
-        <div
-          className="relative transition-transform duration-500"
-          style={{
-            transformStyle: "preserve-3d",
-            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-            minHeight: "400px",
-          }}
-        >
-          {/* Front */}
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card p-8 shadow-sm"
-            style={{ backfaceVisibility: "hidden" }}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className={`rounded-md px-2 py-0.5 text-xs font-medium ${LEVEL_COLORS[current.level] ?? ""}`}
-              >
-                {current.level}
+        {current ? (
+          <>
+            <button
+              onClick={() => setFlipped((f) => !f)}
+              className="lg-card flex min-h-[180px] flex-col items-center justify-center gap-2 p-6 text-center hover:bg-[#212524] hover:-translate-y-0.5 transition-[background-color,transform] duration-150 ease-out"
+            >
+              <span className="text-[30px] font-bold tracking-[-.01em]">{current.word}</span>
+              <span className="tabular-nums text-xs text-muted-foreground">
+                {current.pronunciation ? `/${current.pronunciation.replace(/^\/|\/$/g, "")}/ · ` : ""}
+                {POS_LABEL[current.partOfSpeech] ?? current.partOfSpeech.toLowerCase()} · {current.level}
               </span>
-              <span className="text-xs italic text-muted-foreground">
-                {POS_LABEL[current.partOfSpeech] ?? current.partOfSpeech.toLowerCase()}
+              <span className={cn("mt-1.5 min-h-[46px] text-[15px] leading-normal", flipped ? "text-[#52C79A] dark:text-[#52C79A]" : "text-[#A3ABA7]")}>
+                {flipped ? current.meaning : "Tap to see the meaning"}
               </span>
-            </div>
-            <p className="text-4xl font-semibold tracking-tight text-foreground">
-              {current.word}
-            </p>
-            {current.pronunciation && (
-              <p className="text-sm text-muted-foreground">/{current.pronunciation}/</p>
-            )}
-            <Button className="mt-4" onClick={flip}>
-              Reveal meaning
-            </Button>
-          </div>
-
-          {/* Back */}
-          <div
-            className="absolute inset-0 flex flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-sm"
-            style={{
-              backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className={`rounded-md px-2 py-0.5 text-xs font-medium ${LEVEL_COLORS[current.level] ?? ""}`}
-              >
-                {current.level}
-              </span>
-              <span className="text-xs italic text-muted-foreground">
-                {POS_LABEL[current.partOfSpeech] ?? current.partOfSpeech.toLowerCase()}
-              </span>
-              <span className="ml-auto text-lg font-semibold">{current.word}</span>
-            </div>
-
-            <p className="text-base text-foreground">{current.meaning}</p>
-
-            {current.examples.length > 0 && (
-              <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Examples</p>
-                {current.examples.slice(0, 2).map((ex, i) => (
-                  <p key={i} className="text-sm italic text-muted-foreground">"{ex}"</p>
-                ))}
-              </div>
-            )}
-
-            {(current.synonyms.length > 0 || current.antonyms.length > 0) && (
-              <div className="flex flex-wrap gap-4">
-                {current.synonyms.length > 0 && (
-                  <div>
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Synonyms</p>
-                    <div className="flex flex-wrap gap-1">
-                      {current.synonyms.slice(0, 4).map((s) => (
-                        <Badge key={s} variant="secondary">{s}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {current.antonyms.length > 0 && (
-                  <div>
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Antonyms</p>
-                    <div className="flex flex-wrap gap-1">
-                      {current.antonyms.slice(0, 4).map((s) => (
-                        <Badge key={s} variant="outline">{s}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="mt-auto flex gap-3 pt-2">
-              <Button variant="outline" className="flex-1" onClick={again}>
+              {flipped && current.examples.length > 0 && (
+                <span className="text-[13px] italic leading-snug text-muted-foreground">
+                  &ldquo;{current.examples[0]}&rdquo;
+                </span>
+              )}
+              {flipped && current.synonyms.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  Similar: {current.synonyms.slice(0, 4).join(", ")}
+                </span>
+              )}
+            </button>
+            <div className="flex gap-2">
+              <button onClick={repeat} className={cn(btn, "border-[1.5px] border-[#2A2F2D] bg-[#171A19] shadow-[inset_-4px_-5px_0_#080A09]")}>
                 Again
-              </Button>
-              <Button className="flex-1" onClick={gotIt}>
-                Got it
-              </Button>
+              </button>
+              <button onClick={good} className={cn(btn, "lg-btn-shadow bg-primary text-primary-foreground hover:bg-[#6BD3AB] active:translate-y-px")}>
+                Good
+              </button>
             </div>
+          </>
+        ) : (
+          <div className="lg-card flex min-h-[180px] flex-col items-center justify-center gap-3 p-6 text-center">
+            <span className="text-[22px] font-bold">You reviewed all {total} words</span>
+            <button
+              onClick={() => { setQueue(initial); setKnown(new Set()); setAgain(new Set()); }}
+              className={cn(btn, "max-w-40 border border-input hover:bg-muted dark:border-[#2A2F2D]")}
+            >
+              Start over
+            </button>
           </div>
-        </div>
+        )}
       </div>
-    </div>
+
+      <span className={sectionTitle}>My words</span>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2.5">
+        {initial.map((w) => (
+          <div key={w.word} className="lg-card flex items-center gap-3 rounded-2xl px-3.5 py-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[15px] font-bold">{w.word}</span>
+              <span className="truncate text-[13px] text-muted-foreground">{w.meaning}</span>
+            </div>
+            <span className={cn("shrink-0 rounded-full px-[9px] py-0.5 text-[11.5px] font-bold", STATE[state(w.word)])}>
+              {state(w.word)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
