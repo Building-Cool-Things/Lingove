@@ -27,10 +27,10 @@ export function Explore() {
     <>
       <div className={cn(pageCol, "flex flex-col content-start gap-5")}>
         <div className="flex flex-none flex-col gap-3">
-          <span className="text-[30px] font-semibold leading-[1.1] tracking-[-.035em]">Explore</span>
+          <span className="text-[30px] font-bold leading-[1.1] tracking-[-.01em]">Explore</span>
           <div className="relative">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input value={S.exq} onChange={(e) => set({ exq: e.target.value })} placeholder="Search stories" className="pl-10" />
+            <Input value={S.exq} onChange={(e) => set({ exq: e.target.value })} placeholder="Search situations" className="pl-10" />
           </div>
         </div>
 
@@ -50,18 +50,18 @@ export function Explore() {
                     <Bookmark size={17} />
                   </Button>
                 </div>
-                <span className="text-[15px] font-semibold leading-tight">{s.title}</span>
+                <span className="text-[15px] font-bold leading-tight">{s.title}</span>
                 <span className="line-clamp-3 text-[13px] leading-[1.4] text-muted-foreground">{s.sceneSetup}</span>
                 <div className="mt-auto flex items-center gap-2">
-                  <Badge variant="secondary">{s.incidentCount} scenes</Badge>
+                  <Badge variant="secondary">{s.incidentCount} challenges</Badge>
                   {s.chatId && <span className="text-[12px] text-muted-foreground">Started</span>}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-        {scenarios && !list.length && <span className="text-[14px] text-muted-foreground">{scenarios.length ? "No stories match. Try another word." : "No stories are published yet."}</span>}
-        {!scenarios && <span className="text-[14px] text-muted-foreground">Loading stories…</span>}
+        {scenarios && !list.length && <span className="text-[14px] text-muted-foreground">{scenarios.length ? "No situations match. Try another word." : "No situations are published yet."}</span>}
+        {!scenarios && <span className="text-[14px] text-muted-foreground">Loading situations…</span>}
       </div>
 
       <Sheet open={sc != null} onOpenChange={(o) => { if (!o) set({ scen: null }); }}>
@@ -71,14 +71,14 @@ export function Explore() {
               <div className="flex flex-none items-center gap-3.5">
                 <Avatar size="2xl"><AvatarFallback><MessageCircle size={24} /></AvatarFallback></Avatar>
                 <div className="flex flex-col gap-1">
-                  <SheetTitle className="text-[20px] leading-tight tracking-[-.02em]">{sc.title}</SheetTitle>
-                  <span className="text-[12.5px] text-muted-foreground">{sc.incidentCount} scenes · chat in your own words</span>
+                  <SheetTitle className="text-[20px] leading-tight tracking-[-.01em]">{sc.title}</SheetTitle>
+                  <span className="text-[12.5px] text-muted-foreground">{sc.incidentCount} challenges · chat in your own words</span>
                 </div>
               </div>
-              <SheetDescription className="flex-none text-[14.5px] leading-normal text-[#c5cee0]">{sc.sceneSetup}</SheetDescription>
+              <SheetDescription className="flex-none text-[14.5px] leading-normal text-[#F3F6F4]">{sc.sceneSetup}</SheetDescription>
               <div className="flex flex-none flex-col gap-2">
-                <span className="text-[11.5px] font-semibold tracking-[.04em] text-muted-foreground">FIRST SCENE GOALS</span>
-                {sc.firstGoals.map((g) => <div key={g} className="flex items-center gap-2.5 text-[14px] font-semibold"><span className="size-5 flex-none rounded-full border-[1.5px] border-[#4f6085]" />{g}</div>)}
+                <span className="text-[11.5px] font-bold tracking-[.04em] text-muted-foreground">FIRST CHALLENGE GOALS</span>
+                {sc.firstGoals.map((g) => <div key={g} className="flex items-center gap-2.5 text-[14px] font-bold"><span className="size-5 flex-none rounded-full border-[1.5px] border-[#A3ABA7]" />{g}</div>)}
               </div>
               {chatError && <span className="text-[12.5px] text-destructive">{chatError}</span>}
               <Button

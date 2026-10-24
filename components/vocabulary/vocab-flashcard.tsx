@@ -19,12 +19,12 @@ const POS_LABEL: Record<string, string> = {
 
 // Status pill colours from the design's "My words" list.
 const STATE = {
-  New: "bg-[#1c2a55] text-[#8fa8ff]",
-  Learning: "bg-[#ffb38f]/15 text-[#ffb38f]",
-  Known: "bg-[#143a25] text-[#d3f5e1]",
+  New: "bg-[#2A2F2D] text-[#52C79A]",
+  Learning: "bg-[#EDBF73]/15 text-[#EDBF73]",
+  Known: "bg-[#212524] text-[#6BD3AB]",
 };
 
-const btn = "h-11 flex-1 rounded-xl text-[14.5px] font-medium transition-colors";
+const btn = "h-11 flex-1 rounded-full text-[14.5px] font-bold transition-[transform,background-color] duration-100 active:scale-[.96]";
 
 export function VocabFlashcard({ initial }: { initial: VocabCard[] }) {
   const [queue, setQueue] = useState<VocabCard[]>(initial);
@@ -73,14 +73,14 @@ export function VocabFlashcard({ initial }: { initial: VocabCard[] }) {
           <>
             <button
               onClick={() => setFlipped((f) => !f)}
-              className="lg-card flex min-h-[180px] flex-col items-center justify-center gap-2 p-6 text-center transition-colors hover:border-primary"
+              className="lg-card flex min-h-[180px] flex-col items-center justify-center gap-2 p-6 text-center hover:bg-[#212524] hover:-translate-y-0.5 transition-[background-color,transform] duration-150 ease-out"
             >
-              <span className="text-[30px] font-semibold tracking-[-0.02em]">{current.word}</span>
-              <span className="font-mono text-xs text-muted-foreground">
+              <span className="text-[30px] font-bold tracking-[-.01em]">{current.word}</span>
+              <span className="tabular-nums text-xs text-muted-foreground">
                 {current.pronunciation ? `/${current.pronunciation.replace(/^\/|\/$/g, "")}/ · ` : ""}
                 {POS_LABEL[current.partOfSpeech] ?? current.partOfSpeech.toLowerCase()} · {current.level}
               </span>
-              <span className={cn("mt-1.5 min-h-[46px] text-[15px] leading-normal", flipped ? "text-[#1d8a50] dark:text-[#7fe3a8]" : "text-[#667494]")}>
+              <span className={cn("mt-1.5 min-h-[46px] text-[15px] leading-normal", flipped ? "text-[#52C79A] dark:text-[#52C79A]" : "text-[#A3ABA7]")}>
                 {flipped ? current.meaning : "Tap to see the meaning"}
               </span>
               {flipped && current.examples.length > 0 && (
@@ -95,20 +95,20 @@ export function VocabFlashcard({ initial }: { initial: VocabCard[] }) {
               )}
             </button>
             <div className="flex gap-2">
-              <button onClick={repeat} className={cn(btn, "border border-input bg-transparent hover:bg-muted dark:border-[#252f4a]")}>
+              <button onClick={repeat} className={cn(btn, "border-[1.5px] border-[#2A2F2D] bg-[#171A19] shadow-[inset_-4px_-5px_0_#080A09]")}>
                 Again
               </button>
-              <button onClick={good} className={cn(btn, "lg-btn-shadow bg-primary text-white hover:bg-[#187544] active:translate-y-px")}>
+              <button onClick={good} className={cn(btn, "lg-btn-shadow bg-primary text-primary-foreground hover:bg-[#6BD3AB] active:translate-y-px")}>
                 Good
               </button>
             </div>
           </>
         ) : (
           <div className="lg-card flex min-h-[180px] flex-col items-center justify-center gap-3 p-6 text-center">
-            <span className="text-[22px] font-semibold">You reviewed all {total} words</span>
+            <span className="text-[22px] font-bold">You reviewed all {total} words</span>
             <button
               onClick={() => { setQueue(initial); setKnown(new Set()); setAgain(new Set()); }}
-              className={cn(btn, "max-w-40 border border-input hover:bg-muted dark:border-[#252f4a]")}
+              className={cn(btn, "max-w-40 border border-input hover:bg-muted dark:border-[#2A2F2D]")}
             >
               Start over
             </button>
@@ -121,10 +121,10 @@ export function VocabFlashcard({ initial }: { initial: VocabCard[] }) {
         {initial.map((w) => (
           <div key={w.word} className="lg-card flex items-center gap-3 rounded-2xl px-3.5 py-3">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="text-[15px] font-semibold">{w.word}</span>
+              <span className="text-[15px] font-bold">{w.word}</span>
               <span className="truncate text-[13px] text-muted-foreground">{w.meaning}</span>
             </div>
-            <span className={cn("shrink-0 rounded-full px-[9px] py-0.5 text-[11.5px] font-semibold", STATE[state(w.word)])}>
+            <span className={cn("shrink-0 rounded-full px-[9px] py-0.5 text-[11.5px] font-bold", STATE[state(w.word)])}>
               {state(w.word)}
             </span>
           </div>

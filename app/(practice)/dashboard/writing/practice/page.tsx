@@ -54,7 +54,7 @@ function WordProgress({ count, min, recommended, max }: {
       </div>
       <div className="flex justify-between text-xs">
         <span className={cn(
-          "font-semibold tabular-nums",
+          "font-bold tabular-nums",
           count === 0       ? "text-muted-foreground"
           : count < min     ? "text-rose-600 dark:text-rose-400"
           : count <= max    ? "text-emerald-700 dark:text-emerald-400"
@@ -128,7 +128,7 @@ export default function WritingPracticePage() {
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium capitalize text-foreground">{question.topic}</span>
             <span className="text-muted-foreground/40">·</span>
-            <span className={cn("rounded-full border px-2.5 py-0.5 text-xs font-semibold", DIFFICULTY_STYLE[diff])}>
+            <span className={cn("rounded-full border px-2.5 py-0.5 text-xs font-bold", DIFFICULTY_STYLE[diff])}>
               {diff}
             </span>
             <span className="text-muted-foreground/40">·</span>
@@ -148,7 +148,7 @@ export default function WritingPracticePage() {
         {/* Left — tinted question panel */}
         <div className="flex w-full shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-7 py-8 lg:w-[44%] xl:px-10">
 
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#1d8a50] dark:text-[#7fe3a8]">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#52C79A] dark:text-[#52C79A]">
             Writing Prompt
           </p>
 
@@ -159,21 +159,21 @@ export default function WritingPracticePage() {
               ))}
             </div>
           ) : (
-            <p className="mt-5 text-xl font-semibold leading-9 tracking-tight text-foreground">
+            <p className="mt-5 text-xl font-bold leading-9 tracking-tight text-foreground">
               {question?.prompt}
             </p>
           )}
 
           {/* Tips */}
           <div className="mt-10">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-[#1d8a50] dark:text-[#7fe3a8]">
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-widest text-[#52C79A] dark:text-[#52C79A]">
               Tips
             </p>
             <ul className="space-y-3">
               {(isLoading ? Array(3).fill("") : (question?.tips ?? [])).map((tip, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className={cn(
-                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
+                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
                     TIP_ACCENT[i] ?? TIP_ACCENT[0]
                   )}>
                     {i + 1}

@@ -6,7 +6,7 @@ export default function ListeningPage() {
   return (
     <section className="px-5 py-6 sm:px-8 lg:px-10">
       <Badge variant="secondary">Listening practice</Badge>
-      <h1 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">Listening</h1>
+      <h1 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">Listening</h1>
       <p className="mt-2 text-muted-foreground">
         Audio drills for natural rhythm and comprehension. Coming soon.
       </p>

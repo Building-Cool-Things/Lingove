@@ -67,7 +67,7 @@ const DEMOS: Record<string, () => Partial<State>> = {
 };
 
 export type Me = {
-  name: string; initial: string; image: string; level: number; xp: number; xpNext: number; streak: number; nativeName: string;
+  name: string; email: string; initial: string; image: string; level: number; xp: number; xpNext: number; streak: number; nativeName: string;
   goal: number; today: number; levelCode: string; levelName: string; interests: number; corr: "instant" | "end"; missions: number; words: number;
   readDiff: Difficulty; writeDiff: Difficulty;
 };
@@ -76,7 +76,7 @@ function makeMe(user: { name?: string | null; email: string; image: string }, p:
   const name = user.name?.trim() || user.email.split("@")[0];
   const lv = LEVELS.find((l) => l[0] === p.currentLevel);
   return {
-    name, initial: name[0].toUpperCase(), image: user.image, level: p.level, xp: p.totalXP, xpNext: p.xpForNextLevel, streak: p.currentStreak,
+    name, email: user.email, initial: name[0].toUpperCase(), image: user.image, level: p.level, xp: p.totalXP, xpNext: p.xpForNextLevel, streak: p.currentStreak,
     nativeName: p.nativeLanguage || "Hindi",
     // ponytail: minutes practised today are not tracked yet, dummy 8 like the prototype (REPLACE.md).
     goal: p.dailyTimeSpend || 10, today: 8,

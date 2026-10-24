@@ -17,6 +17,7 @@ const incidentProgressSchema = new Schema(
     conversationId: { type: Schema.Types.ObjectId, ref: "Conversation" },
     startedAt: Date,
     completedAt: Date,
+    endNote: String, // the guide's closing words, written by the AI when the scene ends
   },
   { timestamps: true }
 );

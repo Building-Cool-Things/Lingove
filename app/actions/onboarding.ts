@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { AVATARS, GOALS, LANGS, LEVELS } from "@/lib/lingov/data";
+import { PLACEMENT_SEED, levelFrom } from "@/lib/lingov/placement";
+import { PlacementQuestion, type IPlacementQuestion } from "@/models/placement-question";
 import { UserProfile } from "@/models/user-profile";
 
 export type OnboardingInput = {
@@ -12,12 +14,14 @@ export type OnboardingInput = {
   image: string;
   nativeLanguage: string;
   interests: string[];
-  currentLevel: string;
+  currentLevel: string; // picked from the list, or filled in by the level test
   dailyTimeSpend: number;
   notifyLanguages: string[];
 };
 
 type OnboardingResult = { ok: boolean; message: string };
+
+export type PlacementQuestionView = { id: string; prompt: string; options: string[] };
 
 async function getCurrentUser() {
   const session = await auth.api.getSession({
@@ -27,6 +31,33 @@ async function getCurrentUser() {
   return session?.user ?? null;
 }
 
+async function activeQuestions() {
+  await connectDB();
+  if (!(await PlacementQuestion.estimatedDocumentCount())) {
+    // First run: load the starting questions. Upsert by order, so a second visitor at the same moment does no harm.
+    await PlacementQuestion.bulkWrite(PLACEMENT_SEED.map((q) => ({ updateOne: { filter: { order: q.order }, update: { $setOnInsert: q }, upsert: true } })));
+  }
+  return PlacementQuestion.find({ isActive: true }).sort({ order: 1 }).lean<IPlacementQuestion[]>();
+}
+
+// The questions for the level test, without the answers.
+export async function getPlacementQuestions(): Promise<PlacementQuestionView[]> {
+  if (!(await getCurrentUser())) throw new Error("Unauthorized");
+  return (await activeQuestions()).map((q) => ({ id: String(q._id), prompt: q.prompt, options: q.options }));
+}
+
+// Marks the level test: the level comes from the answers, the right answers stay on the server.
+export async function scorePlacement(answers: { questionId: string; choice: number }[]): Promise<{ ok: boolean; level?: string; message: string }> {
+  if (!(await getCurrentUser())) throw new Error("Unauthorized");
+  const questions = await activeQuestions();
+  const choices = new Map(answers.map((a) => [a.questionId, a.choice]));
+  if (!questions.length || questions.some((q) => !choices.has(String(q._id)))) {
+    return { ok: false, message: "Please answer all the questions." };
+  }
+  const level = levelFrom(questions.map((q) => ({ level: q.level, correct: choices.get(String(q._id)) === q.answerIndex })));
+  return { ok: true, level, message: "" };
+}
+
 export async function completeOnboarding(data: OnboardingInput): Promise<OnboardingResult> {
   const user = await getCurrentUser();
 
@@ -34,7 +65,7 @@ export async function completeOnboarding(data: OnboardingInput): Promise<Onboard
     throw new Error("Unauthorized");
   }
 
-  const interests = data.interests.filter((v) => typeof v === "string" && v.trim().length > 0).slice(0, 15);
+  const interests = data.interests.filter((v) => typeof v === "string" && v.trim().length > 0);
 
   const name = data.name.trim().slice(0, 50);
   if (!name) {

@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils"
 
 // Lingov look: dark filled field. "pill" is the chat / search field, "default" is a form field.
 const inputVariants = cva(
-  "w-full min-w-0 border border-input bg-card px-3.5 text-[15px] text-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,.3)] transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20",
+  "w-full min-w-0 border-[1.5px] border-input bg-card px-3.5 text-[15px] text-foreground transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-primary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:animate-[lgshake_.3s]",
   {
     variants: {
       size: {
-        default: "h-11 rounded-xl",
-        pill: "h-11 rounded-full px-4",
+        default: "h-[46px] rounded-2xl",
+        pill: "h-[46px] rounded-full px-4",
         sm: "h-10 rounded-full px-4 text-sm",
       },
     },

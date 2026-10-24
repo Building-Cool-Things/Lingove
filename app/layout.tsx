@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "Lingov",
@@ -25,9 +20,9 @@ export default function RootLayout({
     <html
       suppressHydrationWarning
       lang="en"
-      className={cn("dark h-full antialiased font-sans", geistMono.variable, geist.variable)}
+      className={cn("dark h-full antialiased font-sans", outfit.variable)}
     >
-      <body className="min-h-full flex flex-col bg-[#040608]">{children}</body>
+      <body className="min-h-full flex flex-col bg-background">{children}</body>
     </html>
   );
 }

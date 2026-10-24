@@ -38,6 +38,14 @@ export type FeedbackView = {
   allGoalsDone: boolean;
 };
 
+// One challenge of the scenario with its goals, for the list of everything in the chat.
+export type ChallengeView = {
+  id: string;
+  title: string;
+  status: "done" | "current" | "upcoming";
+  goals: { id: string; goal: string; done: boolean }[];
+};
+
 export type ThreadView = {
   chatId: string;
   scenarioTitle: string;
@@ -46,6 +54,7 @@ export type ThreadView = {
   incidentCount: number;
   status: "in_progress" | "completed";
   milestones: { id: string; goal: string; done: boolean }[];
+  challenges: ChallengeView[]; // every challenge of the scenario, in order
   characters: { id: string; name: string; role: string }[];
   guideName: string;
   guideNote: string; // latest thing the guide said

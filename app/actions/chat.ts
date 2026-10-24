@@ -16,8 +16,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { checkMessage, guideAnswer, storyTurn, translateText, type StoryTurn, type Topic } from "@/lib/chat/engine";
 import type { StoryContext } from "@/lib/chat/prompts";
-import type { ChatSummary, FeedbackView, MessageView, Mistake, ScenarioCard, ThreadView } from "@/lib/chat/types";
-import { GrammarTopic } from "@/models/grammar-topic";
+import type { ChallengeView, ChatSummary, FeedbackView, MessageView, Mistake, ScenarioCard, ThreadView } from "@/lib/chat/types";
+import grammarTopics from "@/grammar-topics.json";
 import {
   Chat, Conversation, Guide, IncidentProgress, Scenario, ScenarioProgress,
   type IChat, type IConversation, type IGuide, type IIncidentProgress, type IScenario, type IScenarioProgress,
@@ -52,17 +52,14 @@ async function requireUser() {
   };
 }
 
-// Grammar topics change rarely, so they are kept in memory for a few minutes instead of read on every message.
-let topicCache: { at: number; topics: Topic[] } | null = null;
-async function getTopics(): Promise<Topic[]> {
-  if (!topicCache || Date.now() - topicCache.at > 10 * 60_000) {
-    const topics = await GrammarTopic.find({}, "slug title").sort({ level: 1 }).lean<Topic[]>();
-    topicCache = { at: Date.now(), topics: topics.map(({ slug, title }) => ({ slug, title })) };
-  }
-  return topicCache.topics;
-}
+// Grammar topics never change at runtime, so they come from the same JSON the seed loads. No database read.
+// Anything else about a topic (lesson, explanation) is still fetched from the database by slug when needed.
+const TOPICS: Topic[] = grammarTopics.map(({ slug, title }) => ({ slug, title }));
+const TOPIC_TITLES = new Map(TOPICS.map((t) => [t.slug, t.title]));
 
+// The scene's goals in the order the learner should reach them (sorted copy, the stored array is not changed).
 const milestonesOf = (incident: Incident) => [...incident.milestones].sort((a, b) => a.order - b.order);
+// Display name of a character in this scene from their id. Falls back to "Guide" (the guide is not in characterParticipants).
 const nameOf = (incident: Incident, characterId?: string | null) =>
   incident.characterParticipants.find((c) => c.id === characterId)?.name ?? "Guide";
 
@@ -167,7 +164,7 @@ const touchChat = (chatId: Types.ObjectId, lastMessage: string) =>
 
 // ── Views sent to the browser (never include secrets) ────────────────────────
 
-function toMessageView(titles: Map<string, string>, m: StoredMessage, incident: Incident): MessageView {
+function toMessageView(m: StoredMessage, incident: Incident): MessageView {
   return {
     id: String(m._id),
     senderType: m.speaker,
@@ -182,13 +179,13 @@ function toMessageView(titles: Map<string, string>, m: StoredMessage, incident: 
       whyNative: e.explanationNative ?? undefined,
       topicSlugs: e.code ? [e.code] : [],
       category: e.category as Mistake["category"],
-      topicTitles: e.code ? [titles.get(e.code) ?? e.code] : [],
+      topicTitles: e.code ? [TOPIC_TITLES.get(e.code) ?? e.code] : [],
     })),
   };
 }
 
 // End-of-scene summary. Plain counting, no AI: which grammar topics came up most.
-function buildFeedback(messages: StoredMessage[], titles: Map<string, string>, allGoalsDone: boolean): FeedbackView {
+function buildFeedback(messages: StoredMessage[], allGoalsDone: boolean, endNote?: string | null): FeedbackView {
   const mine = messages.filter((m) => m.speaker === "user");
   const errors = mine.flatMap((m) => m.evaluation?.errors ?? []);
 
@@ -196,10 +193,10 @@ function buildFeedback(messages: StoredMessage[], titles: Map<string, string>, a
   for (const e of errors) if (e.code) counts.set(e.code, (counts.get(e.code) ?? 0) + 1);
 
   return {
-    summary: allGoalsDone ? "You reached every goal in this scene. Well done!" : "The scene ended before every goal was reached. Try the next one!",
+    summary: endNote || (allGoalsDone ? "You reached every goal in this scene. Well done!" : "The scene ended before every goal was reached. Try the next one!"),
     messages: mine.length,
     mistakes: errors.length,
-    topics: [...counts].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([slug, count]) => ({ slug, title: titles.get(slug) ?? slug, count })),
+    topics: [...counts].sort((a, b) => b[1] - a[1]).map(([slug, count]) => ({ slug, title: TOPIC_TITLES.get(slug) ?? slug, count })),
     examples: errors.slice(0, 3).map((e) => ({ wrong: e.original ?? "", right: e.correction ?? "", why: e.explanation ?? "" })),
     allGoalsDone,
   };
@@ -207,10 +204,42 @@ function buildFeedback(messages: StoredMessage[], titles: Map<string, string>, a
 
 async function buildThread(chatId: string, userId: string): Promise<ThreadView> {
   const { scenario, incident, incidentProgress: ip, conversation, guide } = await loadChat(chatId, userId);
-  const titles = new Map((await getTopics()).map((t) => [t.slug, t.title]));
   const index = scenario.incidents.findIndex((i) => i.id === incident.id);
   const completed = ip.status === "completed";
   const lastGuideMessage = conversation.messages.findLast((m) => m.speaker === "guide");
+
+  // Earlier scenes stay in the chat: their messages, then a "system" divider that says the scene ended.
+  const before = scenario.incidents.slice(0, index);
+  const allProgress = await IncidentProgress.find({ userId, scenarioId: scenario._id }).lean<IIncidentProgress[]>();
+  const pastProgress = allProgress.filter((p) => before.some((i) => i.id === p.incidentId));
+  const pastConversations = await Conversation.find({ _id: { $in: pastProgress.map((p) => p.conversationId) } }).lean<IConversation[]>();
+  const history = before.flatMap((inc, n): MessageView[] => {
+    const p = pastProgress.find((x) => x.incidentId === inc.id);
+    const c = pastConversations.find((x) => String(x._id) === String(p?.conversationId));
+    if (!p || !c) return [];
+    const fb = buildFeedback(c.messages, p.completedMilestoneIds.length === inc.milestones.length, p.endNote);
+    const end: MessageView = {
+      id: `end-${inc.id}`,
+      senderType: "system",
+      senderId: "system",
+      senderName: `Scene ${n + 1} · ${inc.title}`,
+      text: `${fb.summary} ${fb.messages} messages, ${fb.mistakes === 0 ? "no mistakes" : `${fb.mistakes} mistake${fb.mistakes === 1 ? "" : "s"}`}.`,
+      at: (p.completedAt ?? c.messages.at(-1)?.createdAt ?? new Date()).toISOString(),
+      mistakes: [],
+    };
+    return [...c.messages.filter((m) => m.speaker !== "guide").map((m) => toMessageView(m, inc)), end];
+  });
+
+  const challenges: ChallengeView[] = scenario.incidents.map((inc) => {
+    const p = inc.id === incident.id ? ip : allProgress.find((x) => x.incidentId === inc.id);
+    const done = p?.completedMilestoneIds ?? [];
+    return {
+      id: inc.id,
+      title: inc.title,
+      status: p?.status === "completed" ? "done" : inc.id === incident.id ? "current" : "upcoming",
+      goals: milestonesOf(inc).map((m) => ({ id: m.id, goal: m.goal, done: done.includes(m.id) })),
+    };
+  });
 
   return {
     chatId,
@@ -220,11 +249,12 @@ async function buildThread(chatId: string, userId: string): Promise<ThreadView> 
     incidentCount: scenario.incidents.length,
     status: completed ? "completed" : "in_progress",
     milestones: milestonesOf(incident).map((m) => ({ id: m.id, goal: m.goal, done: ip.completedMilestoneIds.includes(m.id) })),
+    challenges,
     characters: incident.characterParticipants.map(({ id, name, role }) => ({ id, name, role })),
     guideName: guide.name,
     guideNote: lastGuideMessage?.text ?? "",
-    messages: conversation.messages.filter((m) => m.speaker !== "guide").map((m) => toMessageView(titles, m, incident)),
-    feedback: completed ? buildFeedback(conversation.messages, titles, ip.completedMilestoneIds.length === incident.milestones.length) : null,
+    messages: [...history, ...conversation.messages.filter((m) => m.speaker !== "guide").map((m) => toMessageView(m, incident))],
+    feedback: completed ? buildFeedback(conversation.messages, ip.completedMilestoneIds.length === incident.milestones.length, ip.endNote) : null,
     hasNext: index < scenario.incidents.length - 1,
   };
 }
@@ -319,9 +349,13 @@ export async function startScenario(scenarioId: string): Promise<string> {
 // ── Send a message ───────────────────────────────────────────────────────────
 
 export async function sendMessage(chatId: string, rawText: string): Promise<ThreadView> {
+  // clean the input first
   const text = rawText.trim().slice(0, 500);
+
   if (!text) throw new Error("Write a message first.");
+
   const user = await requireUser();
+  
   const { chat, scenario, progress, incident, incidentProgress: ip, conversation, guide } = await loadChat(chatId, user.userId);
   if (ip.status === "completed") throw new Error("This scene is finished.");
 
@@ -331,8 +365,7 @@ export async function sendMessage(chatId: string, rawText: string): Promise<Thre
   // A failed check must never block the conversation. A failed story call does, and nothing is saved.
   const [turn, check] = await Promise.all([
     storyTurn(ctx, text),
-    getTopics()
-      .then((topics) => checkMessage(text, user.level, user.nativeLanguage, topics))
+    checkMessage(text, user.level, user.nativeLanguage, TOPICS)
       .catch(() => ({ mistakes: [] as Mistake[] })),
   ]);
 
@@ -355,18 +388,27 @@ export async function sendMessage(chatId: string, rawText: string): Promise<Thre
   await touchChat(chat._id, lastLine(incident, turn));
 
   if (doneIds.length === incident.milestones.length || ip.turnCount + 1 >= MAX_MESSAGES) {
-    await completeIncident(user.userId, scenario, progress, incident, ip.xpEarned + xp);
+    // The guide closes the scene in their own words. If the AI fails, the plain summary is used instead.
+    const allDone = doneIds.length === incident.milestones.length;
+    const mistakes = [...conversation.messages, userMessage].reduce((n, m) => n + (m.evaluation?.errors.length ?? 0), 0);
+    const endCtx: StoryContext = {
+      ...ctx,
+      done: doneIds,
+      history: [...ctx.history, { name: "Learner", text }, ...turn.replies.map((r) => ({ name: nameOf(incident, r.characterId), text: r.text }))].slice(-HISTORY_LENGTH),
+    };
+    const endNote = await guideAnswer(endCtx, `The scene just ended (${allDone ? "I reached every goal" : "time ran out before every goal was reached"}). I made ${mistakes} mistake${mistakes === 1 ? "" : "s"} in total. In 2 short sentences, tell me what I did well and one thing to improve next time.`).catch(() => "");
+    await completeIncident(user.userId, scenario, progress, incident, ip.xpEarned + xp, endNote);
   }
   return buildThread(chatId, user.userId);
 }
 
 // ── End of a scene: close it, move the scenario on, give XP ──────────────────
 
-async function completeIncident(userId: string, scenario: IScenario, progress: IScenarioProgress, incident: Incident, xpEarned: number) {
+async function completeIncident(userId: string, scenario: IScenario, progress: IScenarioProgress, incident: Incident, xpEarned: number, endNote: string) {
   const now = new Date();
   const isLast = scenario.incidents.at(-1)?.id === incident.id;
 
-  await IncidentProgress.updateOne({ userId, scenarioId: scenario._id, incidentId: incident.id }, { status: "completed", completedAt: now });
+  await IncidentProgress.updateOne({ userId, scenarioId: scenario._id, incidentId: incident.id }, { status: "completed", completedAt: now, endNote });
   await Conversation.updateOne({ userId, scenarioId: scenario._id, incidentId: incident.id }, { status: "completed" });
   await ScenarioProgress.updateOne(
     { _id: progress._id },

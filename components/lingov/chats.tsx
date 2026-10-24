@@ -5,7 +5,7 @@
 // components/ui, so the look is changed there and not in this file.
 import { useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, CheckCheck, Languages, Lightbulb, MessageCircle, Pencil, Plus, Search, SendHorizontal, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCheck, Languages, Lightbulb, ListChecks, MessageCircle, Pencil, Plus, Search, SendHorizontal } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +14,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { FeedbackView, MessageView, MistakeView, ThreadView } from "@/lib/chat/types";
+import type { ChallengeView, FeedbackView, MessageView, MistakeView, ThreadView } from "@/lib/chat/types";
 
 import { useLingov } from "./store";
-import { caps } from "./ui";
+import { caps, Confetti } from "./ui";
 
 const FILTERS = ["All", "In progress", "Completed"];
 
@@ -49,7 +49,8 @@ export function Chats() {
   const [seenNote, setSeenNote] = useState("");
   const [question, setQuestion] = useState("");
   const [shown, setShown] = useState<string[]>([]); // message ids whose translation is visible
-  const [sheet, setSheet] = useState<Tip | null>(null);
+  const [sheet, setSheet] = useState<Tip[] | null>(null);
+  const [goalsOpen, setGoalsOpen] = useState(false); // popup with every challenge and its goals
 
   const scRef = useRef<HTMLDivElement>(null);
   const lastH = useRef(0);
@@ -59,9 +60,6 @@ export function Chats() {
   });
 
   const rows = (chats ?? []).filter((c) => (S.cf === "All" || (S.cf === "Completed") === c.completed) && (!q || (c.title + " " + c.incidentTitle).toLowerCase().includes(q)));
-  const nextGoal = thread?.milestones.find((m) => !m.done);
-  const doneCount = thread?.milestones.filter((m) => m.done).length ?? 0;
-  const tipCount = thread?.messages.reduce((n, m) => n + m.mistakes.length, 0) ?? 0;
   const noteIsNew = !!thread?.guideNote && !guideOpen && thread.guideNote !== seenNote;
 
   const submit = () => {
@@ -88,7 +86,7 @@ export function Chats() {
       <div className={`${open ? "hidden dk:flex" : "flex"} min-h-0 min-w-0 flex-1 flex-col dk:flex-[0_0_340px] dk:border-r dk:border-border`}>
         <div className="flex flex-none flex-col gap-3 px-5 pb-2 pt-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-[24px] font-semibold tracking-[-.02em]">Chats</span>
+            <span className="text-[24px] font-bold tracking-[-.01em]">Chats</span>
             <Button size="icon-md" onClick={() => router.push("/dashboard/explore")} aria-label="New mission"><Plus size={18} /></Button>
           </div>
           <div className="relative">
@@ -105,19 +103,18 @@ export function Chats() {
               <Avatar size="xl"><AvatarFallback><MessageCircle size={21} /></AvatarFallback></Avatar>
               <div className="-mb-2.5 flex min-w-0 flex-1 flex-col gap-[3px] border-b border-border pb-2.5 pt-0.5">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-[15.5px] font-semibold">{c.title}</span>
+                  <span className="truncate text-[15.5px] font-bold">{c.title}</span>
                   <span className="flex-none text-[12px] text-muted-foreground">{when(c.lastAt)}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-[13.5px] text-muted-foreground">{c.lastText || c.incidentTitle}</span>
-                  {c.total > 0 && <Badge variant={c.completed ? "secondary" : "warm"} className="tabular-nums">{c.completed ? "Done" : c.done + "/" + c.total}</Badge>}
                 </div>
               </div>
             </div>
           ))}
           {chats && !rows.length && (
             <div className="flex flex-col items-start gap-3 px-5 py-6">
-              <span className="text-[14px] text-muted-foreground">{chats.length ? "No chats found." : "No missions yet. Pick a story in Explore and start chatting."}</span>
+              <span className="text-[14px] text-muted-foreground">{chats.length ? "No chats found." : "No missions yet. Pick a situation in Explore and start chatting."}</span>
               {!chats.length && <Button size="xl" onClick={() => router.push("/dashboard/explore")}>Find a mission</Button>}
             </div>
           )}
@@ -125,7 +122,7 @@ export function Chats() {
       </div>
 
       {/* CONVERSATION */}
-      <div className={`${open ? "flex" : "hidden dk:flex"} relative min-h-0 min-w-0 flex-1 flex-col bg-background`} style={{ backgroundImage: "radial-gradient(#0a0f1a 1px,transparent 1px)", backgroundSize: "16px 16px" }}>
+      <div className={`${open ? "flex" : "hidden dk:flex"} relative min-h-0 min-w-0 flex-1 flex-col bg-background`}>
         {!open && <div className="m-auto text-[14px] text-muted-foreground">Choose a chat to continue your mission.</div>}
         {open && !thread && (
           <div className="flex flex-1 flex-col">
@@ -136,48 +133,50 @@ export function Chats() {
 
         {thread && (
           <>
-            <div className="flex flex-none flex-col gap-2 border-b border-border bg-background/90 px-3.5 pt-2 backdrop-blur-md">
+            <div className="flex flex-none flex-col gap-2 border-b border-border bg-background px-3.5 py-2">
               <div className="flex items-center gap-2.5">
                 <Button variant="ghost" size="icon-md" onClick={closeChat} aria-label="Back" className="-ml-1.5 dk:hidden"><ArrowLeft size={20} /></Button>
                 <Avatar size="lg"><AvatarFallback><MessageCircle size={18} /></AvatarFallback></Avatar>
                 <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-[15.5px] font-semibold">{thread.scenarioTitle}</span>
-                  <span className="min-h-[17px] truncate text-[12.5px] text-[#7fe3a8]">{waiting ? "typing…" : `${thread.incidentTitle} · ${thread.incidentNumber}/${thread.incidentCount}`}</span>
+                  <span className="truncate text-[15.5px] font-bold">{thread.scenarioTitle}</span>
+                  <span className="min-h-[17px] truncate text-[12.5px] text-[#52C79A]">{waiting ? "typing…" : `${thread.incidentTitle} · ${thread.incidentNumber}/${thread.incidentCount}`}</span>
                 </div>
-              </div>
-              <div className="flex items-center gap-2.5 pb-2.5">
-                <Target size={15} className="flex-none text-accent" />
-                <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium">{nextGoal?.goal ?? "All goals done"}</span>
-                <div className="flex w-24 flex-none gap-[3px]">
-                  {thread.milestones.map((m) => <span key={m.id} className={`h-[5px] flex-1 rounded-full ${m.done ? "bg-[#7fe3a8]" : "bg-muted"}`} />)}
-                </div>
-                <span className="text-[11.5px] font-semibold tabular-nums text-muted-foreground">{doneCount + "/" + thread.milestones.length}</span>
+                <Button variant="soft" size="chip" onClick={() => setGoalsOpen(true)} aria-label="All challenges and goals"><ListChecks size={14} />Goals</Button>
               </div>
             </div>
 
             <div ref={scRef} className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overflow-x-hidden px-3.5 pb-2 pt-3.5">
               {thread.messages.map((m) => {
+                if (m.senderType === "system") return (
+                  <div key={m.id} className="my-3 flex flex-col items-center gap-1 text-center">
+                    <span className="flex w-full items-center gap-3 text-[11.5px] font-bold uppercase tracking-wide text-[#52C79A]">
+                      <span className="h-px flex-1 bg-border" />Challenge complete<span className="h-px flex-1 bg-border" />
+                    </span>
+                    <span className="text-[13px] font-bold">{m.senderName}</span>
+                    <span className="max-w-[min(85%,420px)] text-[13px] leading-[1.4] text-muted-foreground">{m.text}</span>
+                  </div>
+                );
                 const mine = m.senderType === "user", showTr = shown.includes(m.id), first = m.mistakes[0];
                 return (
                   <div key={m.id} className={`flex animate-[lgup_.2s_ease-out] flex-col gap-1 ${mine ? "items-end" : "items-start"}`}>
-                    {!mine && <span className="px-1 text-[12px] font-semibold text-muted-foreground">{m.senderName}</span>}
-                    <div className={`max-w-[min(78%,460px)] px-3.25 pb-1.5 pt-2.25 text-[15.5px] leading-[1.4] shadow-[0_1px_1px_rgba(0,0,0,.25)] [text-wrap:pretty] ${mine ? "rounded-[16px_4px_16px_16px] bg-[linear-gradient(180deg,#22975a,#1a7f49)] text-white" : "rounded-[4px_16px_16px_16px] bg-muted text-foreground"}`}>
+                    {!mine && <span className="px-1 text-[12px] font-bold text-muted-foreground">{m.senderName}</span>}
+                    <div className={`max-w-[min(78%,460px)] px-3.25 pb-1.5 pt-2.25 text-[15.5px] leading-[1.4] [text-wrap:pretty] ${mine ? "rounded-[24px_8px_24px_24px] bg-[#52C79A] text-[#052013]" : "rounded-[8px_24px_24px_24px] border border-border bg-card text-foreground"}`}>
                       <span>{m.text}</span>
-                      {showTr && <div className="mt-1.5 border-t border-white/15 pt-1.5 text-[14px] text-muted-foreground">{m.translation ?? "Translating…"}</div>}
-                      <div className={`mt-0.5 flex items-center justify-end gap-1.5 text-[10.5px] ${mine ? "text-[#c9ecd9]" : "text-muted-foreground"}`}>
-                        {!mine && <Button variant="link" size="xs" onClick={() => toggleTranslation(m)} aria-label="Translate" className="mr-auto h-auto p-0 text-[11.5px]"><Languages />{showTr ? "Hide" : "Translate"}</Button>}
+                      {showTr && <div className="mt-1.5 border-t border-current/20 pt-1.5 text-[14px] text-muted-foreground">{m.translation ?? "Translating…"}</div>}
+                      <div className={`mt-0.5 flex items-center justify-end gap-1.5 text-[10.5px] ${mine ? "text-[#052013]/70" : "text-muted-foreground"}`}>
+                        {!mine && <Button variant="ghost" size="xs" onClick={() => toggleTranslation(m)} aria-label="Translate" className="mr-auto h-auto p-0 text-[11.5px]"><Languages />{showTr ? "Hide" : "Translate"}</Button>}
                         {clock(m.at)}
                         {mine && <CheckCheck size={13} />}
                       </div>
                     </div>
                     {mine && first && me.corr === "instant" && (
-                      <Button variant="warm" size="chip" onClick={() => setSheet(toTip(m.text, first))}><Pencil />{m.mistakes.length === 1 ? "1 tip" : m.mistakes.length + " tips"}</Button>
+                      <Button variant="warm" size="chip" onClick={() => setSheet(m.mistakes.map((x) => toTip(m.text, x)))}><Pencil />{m.mistakes.length === 1 ? "1 tip" : m.mistakes.length + " tips"}</Button>
                     )}
                   </div>
                 );
               })}
               {waiting && (
-                <div className="flex gap-1 self-start rounded-[4px_16px_16px_16px] border border-border bg-muted px-3.5 py-3">
+                <div className="flex gap-1 self-start rounded-[8px_24px_24px_24px] border border-border bg-card px-3.5 py-3">
                   {[0, 0.15, 0.3].map((d) => <span key={d} className="size-[7px] rounded-full bg-muted-foreground" style={{ animation: `lgdot 1s ${d}s infinite` }} />)}
                 </div>
               )}
@@ -189,7 +188,7 @@ export function Chats() {
             {guideOpen && thread.status === "in_progress" && (
               <Card size="sm" className="mx-3.5 mb-2 flex-none animate-[lgup_.2s_ease-out]">
                 <CardContent className="flex flex-col gap-2">
-                  <span className="flex items-center gap-2 text-[12.5px] font-semibold text-accent"><Lightbulb size={14} />{thread.guideName} · your guide</span>
+                  <span className="flex items-center gap-2 text-[12.5px] font-bold text-accent"><Lightbulb size={14} />{thread.guideName} · your guide</span>
                   <span className="text-[14px] leading-[1.45]">{thread.guideNote || "Say hello and see how the people react."}</span>
                   <div className="flex items-center gap-2">
                     <Input
@@ -228,28 +227,38 @@ export function Chats() {
           </>
         )}
 
+        <Sheet open={goalsOpen} onOpenChange={setGoalsOpen}>
+          <SheetContent>
+            <SheetTitle>Challenges and goals</SheetTitle>
+            <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">{thread && <ChallengeList challenges={thread.challenges} />}</div>
+            <Button size="xl" onClick={() => setGoalsOpen(false)}>Close</Button>
+          </SheetContent>
+        </Sheet>
+
         <Sheet open={sheet != null} onOpenChange={(o) => { if (!o) setSheet(null); }}>
           <SheetContent>
             {sheet && (
               <>
-                <div className="flex items-center gap-2">
-                  <SheetTitle className="flex-1">Tip</SheetTitle>
-                  <Badge variant="warm">{sheet.label}</Badge>
-                </div>
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-col gap-[3px]">
-                    <span className={caps}>YOU WROTE</span>
-                    <span className="text-[16px] text-muted-foreground">{sheet.pre}<span className="text-foreground line-through decoration-accent">{sheet.wrong}</span>{sheet.post}</span>
-                  </div>
-                  <div className="flex flex-col gap-[3px]">
-                    <span className={caps}>BETTER</span>
-                    <span className="text-[16px] text-muted-foreground">{sheet.pre}<b className="text-[#7fe3a8]">{sheet.right}</b>{sheet.post}</span>
-                  </div>
-                  <div className="flex flex-col gap-[3px]">
-                    <span className={caps}>WHY</span>
-                    <span className="text-[14.5px] leading-normal">{sheet.why}</span>
-                    {sheet.whyNative && <span className="text-[14px] leading-normal text-muted-foreground">{sheet.whyNative}</span>}
-                  </div>
+                <SheetTitle>{sheet.length === 1 ? "Tip" : "Tips"}</SheetTitle>
+                <div className="flex min-h-0 flex-col gap-5 overflow-y-auto">
+                  {sheet.map((t, i) => (
+                    <div key={i} className="flex flex-col gap-3">
+                      <Badge variant="warm" className="self-start">{t.label}</Badge>
+                      <div className="flex flex-col gap-[3px]">
+                        <span className={caps}>YOU WROTE</span>
+                        <span className="text-[16px] text-muted-foreground">{t.pre}<span className="text-foreground line-through decoration-destructive">{t.wrong}</span>{t.post}</span>
+                      </div>
+                      <div className="flex flex-col gap-[3px]">
+                        <span className={caps}>BETTER</span>
+                        <span className="text-[16px] text-muted-foreground">{t.pre}<b className="text-[#52C79A]">{t.right}</b>{t.post}</span>
+                      </div>
+                      <div className="flex flex-col gap-[3px]">
+                        <span className={caps}>WHY</span>
+                        <span className="text-[14.5px] leading-normal">{t.why}</span>
+                        {t.whyNative && <span className="text-[14px] leading-normal text-muted-foreground">{t.whyNative}</span>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 <div className="flex gap-2">
                   <Button size="xl" className="flex-1" onClick={() => setSheet(null)}>Got it</Button>
@@ -264,47 +273,47 @@ export function Chats() {
       </div>
 
       {/* CONTEXT PANEL (≥1240px) */}
-      <div className="hidden min-h-0 w-[300px] flex-none flex-col gap-6 overflow-y-auto border-l border-border bg-[#06090e] px-5 py-6 xw:flex">
+      <div className="hidden min-h-0 w-[300px] flex-none flex-col gap-6 overflow-y-auto border-l border-border bg-[#171A19] px-5 py-6 xw:flex">
         {thread ? (
           <>
-            <div className="flex flex-col items-center gap-2.5 pt-2 text-center">
-              <Avatar size="2xl"><AvatarFallback><MessageCircle size={28} /></AvatarFallback></Avatar>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[16px] font-semibold">{thread.incidentTitle}</span>
-                <span className="text-[13px] text-muted-foreground">{thread.scenarioTitle}</span>
-              </div>
-            </div>
             <div className="flex flex-col gap-3">
-              <div className="flex items-baseline justify-between">
-                <span className={caps}>MISSION GOALS</span>
-                <span className="font-mono text-[12px] text-muted-foreground">{doneCount + "/" + thread.milestones.length}</span>
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {thread.milestones.map((m) => (
-                  <div key={m.id} className={`flex items-start gap-2.5 text-[14px] leading-[1.4] ${m.done ? "text-muted-foreground" : "text-foreground"}`}>
-                    <span className={`mt-px flex size-5 flex-none items-center justify-center rounded-full border-[1.5px] border-solid text-white ${m.done ? "border-primary bg-primary" : "border-[#2a3550]"}`}>{m.done && <Check size={12} />}</span>
-                    {m.goal}
-                  </div>
-                ))}
-              </div>
+              <span className={caps}>CURRENT CHALLENGE</span>
+              <span className="text-[13px] leading-normal text-muted-foreground">Finish all the goals below in the chat to complete this challenge.</span>
+              <Card size="sm">
+                <CardContent><ChallengeList challenges={thread.challenges.filter((c) => c.status === "current")} /></CardContent>
+              </Card>
+              <Button variant="outline" onClick={() => setGoalsOpen(true)}><ListChecks />View all challenges and goals</Button>
             </div>
-            <div className="flex flex-col gap-3">
-              <span className={caps}>IN THIS SCENE</span>
-              <div className="flex flex-col gap-2">
-                {thread.characters.map((c) => (
-                  <div key={c.id} className="flex flex-col text-[14px]"><span className="font-semibold">{c.name}</span><span className="text-[12.5px] text-muted-foreground">{c.role}</span></div>
-                ))}
-              </div>
-            </div>
-            <Card size="sm">
-              <CardContent className="flex flex-col gap-1.5">
-                <span className="flex items-center gap-2 text-[13px] font-semibold"><Pencil size={13} className="text-accent" />{(tipCount || "No") + (tipCount === 1 ? " tip" : " tips") + " in this chat"}</span>
-                <span className="text-[13px] leading-normal text-muted-foreground">{me.corr === "instant" ? "Tap a tip under your message to see the correction and why." : "Your tips will be in the summary at the end of the scene."}</span>
-              </CardContent>
-            </Card>
           </>
-        ) : <span className="text-[13px] text-muted-foreground">Your mission goals show here.</span>}
+        ) : <span className="text-[13px] text-muted-foreground">Your challenges and goals show here.</span>}
       </div>
+    </div>
+  );
+}
+
+// Every challenge of the story, each with its goals. Shared by the side panel and the popup.
+function ChallengeList({ challenges }: { challenges: ChallengeView[] }) {
+  return (
+    <div className="flex flex-col gap-4">
+      {challenges.map((c, i) => {
+        return (
+          <div key={c.id} className={`flex flex-col gap-2.5 ${c.status === "upcoming" ? "opacity-60" : ""}`}>
+            <div className="flex items-center gap-2">
+              <span className={`flex size-6 flex-none items-center justify-center rounded-full text-[11.5px] font-bold ${c.status === "done" ? "bg-primary text-[#052013]" : c.status === "current" ? "border-[1.5px] border-primary text-primary" : "border-[1.5px] border-[#2A2F2D] text-muted-foreground"}`}>{c.status === "done" ? <Check size={13} /> : i + 1}</span>
+              <span className="min-w-0 flex-1 truncate text-[14px] font-bold">{c.title}</span>
+              {c.status === "current" && <Badge variant="secondary">Now</Badge>}
+            </div>
+            <div className="flex flex-col gap-2 pl-8">
+              {c.goals.map((g) => (
+                <div key={g.id} className={`flex items-start gap-2.5 text-[13.5px] leading-[1.4] ${g.done ? "text-muted-foreground" : "text-foreground"}`}>
+                  <span className={`mt-px flex size-[18px] flex-none items-center justify-center rounded-full border-[1.5px] border-solid text-[#052013] ${g.done ? "border-primary bg-primary" : "border-[#2A2F2D]"}`}>{g.done && <Check size={11} />}</span>
+                  {g.goal}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -312,10 +321,11 @@ export function Chats() {
 // Shown at the end of a scene: the numbers we counted plus the teacher's short summary.
 function FeedbackCard({ fb, thread, waiting, onNext, onLeave, onPractice }: { fb: FeedbackView; thread: ThreadView; waiting: boolean; onNext: () => void; onLeave: () => void; onPractice: () => void }) {
   return (
-    <Card className="my-3 flex-none border-primary/30">
+    <Card className="relative my-3 flex-none overflow-visible border-primary/30">
+      {fb.allGoalsDone && <Confetti />}
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <span className="text-[11.5px] font-semibold tracking-[.04em] text-[#7fe3a8]">{fb.allGoalsDone ? "SCENE COMPLETE" : "SCENE ENDED"}</span>
+          <span className="text-[11.5px] font-bold tracking-[.04em] text-[#52C79A]">{fb.allGoalsDone ? "CHALLENGE COMPLETE" : "CHALLENGE ENDED"}</span>
           <span className="text-[14.5px] leading-normal">{fb.summary}</span>
           <span className="text-[12.5px] text-muted-foreground">{fb.messages} messages · {fb.mistakes === 0 ? "no mistakes" : fb.mistakes + (fb.mistakes === 1 ? " mistake" : " mistakes")}</span>
         </div>
@@ -328,13 +338,13 @@ function FeedbackCard({ fb, thread, waiting, onNext, onLeave, onPractice }: { fb
         {fb.examples.length > 0 && (
           <div className="flex flex-col gap-2">
             <span className={caps}>YOUR CORRECTIONS</span>
-            {fb.examples.map((e, i) => <span key={i} className="text-[14px] leading-[1.4]"><span className="text-muted-foreground line-through decoration-accent">{e.wrong}</span> → <b className="text-[#7fe3a8]">{e.right}</b></span>)}
+            {fb.examples.map((e, i) => <span key={i} className="text-[14px] leading-[1.4]"><span className="text-muted-foreground line-through decoration-destructive">{e.wrong}</span> → <b className="text-[#52C79A]">{e.right}</b></span>)}
           </div>
         )}
         <div className="flex flex-col gap-2 border-t border-border pt-3">
-          <span className="text-[13.5px] text-muted-foreground">{thread.guideName}: {thread.hasNext ? "Ready for the next scene, or shall we continue tomorrow?" : "That was the last scene of this story. Well done!"}</span>
+          <span className="text-[13.5px] text-muted-foreground">{thread.guideName}: {thread.hasNext ? "Ready for the next challenge, or shall we continue tomorrow?" : "That was the last challenge of this situation. Well done!"}</span>
           <div className="flex gap-2">
-            {thread.hasNext && <Button size="xl" className="flex-1" onClick={onNext} disabled={waiting}>{waiting ? "Preparing…" : "Next scene"}<ArrowRight /></Button>}
+            {thread.hasNext && <Button size="xl" className="flex-1" onClick={onNext} disabled={waiting}>{waiting ? "Preparing…" : "Next challenge"}<ArrowRight /></Button>}
             <Button size="xl" variant="outline" className="flex-1" onClick={onLeave}>{thread.hasNext ? "Tomorrow" : "Back to chats"}</Button>
           </div>
           {fb.topics.length > 0 && <Button variant="link" className="self-center" onClick={onPractice}>Practise these topics<ArrowRight /></Button>}

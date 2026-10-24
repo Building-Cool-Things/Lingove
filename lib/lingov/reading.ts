@@ -68,7 +68,7 @@ export const glossaryRe = (task: ReadingTask) => {
 };
 export const labelOf = (q: QV, value?: string) => (value == null ? "–" : q.labels[q.values.indexOf(value)] ?? value);
 
-export const scoreColor = (right: number, n: number) => (right >= 0.8 * n ? "#4cc283" : right >= 0.6 * n ? "#ffb38f" : "#ea7a4f");
+export const scoreColor = (right: number, n: number) => (right >= 0.8 * n ? "#9ADBBE" : right >= 0.6 * n ? "#52C79A" : "#EDBF73");
 export const verdict = (right: number, n: number) => (right === n ? "Excellent" : right >= 0.8 * n ? "Good" : right >= 0.6 * n ? "Fair" : "Needs work");
 export const fmtTime = (s: number) => Math.floor(s / 60) + " min " + (s % 60) + " s";
 

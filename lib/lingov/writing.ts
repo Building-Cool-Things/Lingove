@@ -5,7 +5,7 @@
 export const WS0 = "I think four-day work week is a good idea for most people. Workers has more time for family and hobbies. For my opinion, people works better when they are not tired. In my last compnay we worked long hours and everyone were stressed. some days I could not focus at all. A shorter week can make people happy and it can make them healthy and it can also make them more productive at work because they rest more. However it does not work for every job, for example hospitals need staff every day. Companies should try it slowly and check the results. So I beleive the four-day week is the future of work.";
 
 export type Cat = "Grammar" | "Spelling" | "Punct." | "Clarity" | "Structure";
-export const WCAT: Record<Cat | "Correct", string> = { Grammar: "#ff8a6b", Spelling: "#ffb38f", "Punct.": "#f2c94c", Clarity: "#8fa8ff", Structure: "#c49bff", Correct: "#4cc283" };
+export const WCAT: Record<Cat | "Correct", string> = { Grammar: "#EDBF73", Spelling: "#EDBF73", "Punct.": "#52C79A", Clarity: "#52C79A", Structure: "#52C79A", Correct: "#52C79A" };
 export const SP: Record<string, string> = { compnay: "company", beleive: "believe", becuase: "because", recieve: "receive", alot: "a lot", freind: "friend", wich: "which", untill: "until", tommorow: "tomorrow", definately: "definitely", opinon: "opinion", realy: "really", productivety: "productivity", enviroment: "environment", goverment: "government", mutaul: "mutual" };
 
 type Rule = { type: Cat; sub: string; re: RegExp; fix: (m: RegExpMatchArray) => string; why: (m: RegExpMatchArray) => string };
@@ -156,7 +156,7 @@ export function analyseAI(wt: string, ai: { corrections: AICorrection[]; general
   return { words, sents, paras, ev, all, errs, okN, tot, cats, top, score, fb, plan, pn, crit };
 }
 
-export const scoreCol = (s: number) => (s >= 8 ? "#4cc283" : s >= 5 ? "#ffb38f" : "#ff8a6b");
+export const scoreCol = (s: number) => (s >= 8 ? "#9ADBBE" : s >= 5 ? "#52C79A" : "#EDBF73");
 export const levelOf = (s: number) => (s >= 7 ? "B2" : s >= 4.5 ? "B1" : s >= 2.5 ? "A2" : "A1");
 export const verdictOf = (s: number) => (s >= 9 ? "Excellent" : s >= 7 ? "Good" : s >= 5 ? "Fair" : "Needs work");
 

@@ -6,7 +6,7 @@ export default function ProgressPage() {
   return (
     <section className="px-5 py-6 sm:px-8 lg:px-10">
       <Badge variant="secondary">Progress</Badge>
-      <h1 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">Progress</h1>
+      <h1 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">Progress</h1>
       <p className="mt-2 text-muted-foreground">
         Track your streaks, words learned, and improvements over time. Coming soon.
       </p>

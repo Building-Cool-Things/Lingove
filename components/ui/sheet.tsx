@@ -16,12 +16,12 @@ function SheetContent({ className, children, ...props }: DialogPrimitive.Popup.P
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
         data-slot="sheet-overlay"
-        className="fixed inset-0 z-50 bg-[rgba(4,7,14,.6)] transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
+        className="fixed inset-0 z-50 bg-[rgba(13,15,14,.6)] transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
       />
       <DialogPrimitive.Popup
         data-slot="sheet-content"
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92%] w-full max-w-120 flex-col gap-4 overflow-y-auto rounded-t-[28px] border border-border bg-card px-5 pt-2.5 pb-7 text-card-foreground shadow-[0_-24px_48px_-12px_rgba(0,0,0,.6)] outline-none transition-transform duration-200 data-ending-style:translate-y-full data-starting-style:translate-y-full",
+          "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[90dvh] w-full max-w-120 flex-col gap-4 overflow-y-auto rounded-t-[28px] border border-border bg-card px-5 pt-2.5 pb-7 text-card-foreground shadow-[0_-24px_48px_-12px_rgba(0,0,0,.6)] outline-none transition-transform duration-200 data-ending-style:translate-y-full data-starting-style:translate-y-full",
           className
         )}
         {...props}

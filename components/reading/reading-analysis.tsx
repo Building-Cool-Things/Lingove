@@ -16,6 +16,7 @@ import { useState } from "react";
 
 import type { ReadingView } from "@/app/actions/reading";
 import { Button } from "@/components/ui/button";
+import { levelName } from "@/lib/lingov/data";
 import { cn } from "@/lib/utils";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -48,9 +49,9 @@ function scoreToTextColor(s: number) {
 }
 
 function scoreToStroke(s: number) {
-  if (s >= 7.5) return "#10b981";
-  if (s >= 5)   return "#f59e0b";
-  return "#ef4444";
+  if (s >= 7.5) return "#9ADBBE";
+  if (s >= 5)   return "#52C79A";
+  return "#EDBF73";
 }
 
 // ── ScoreRing ─────────────────────────────────────────────────────────────────
@@ -72,10 +73,10 @@ function ScoreRing({ score, size = 108 }: { score: number; size?: number }) {
         />
       </svg>
       <div className="absolute text-center">
-        <p className={cn("text-3xl font-semibold tabular-nums leading-none", scoreToTextColor(score))}>
+        <p className={cn("text-3xl font-bold tabular-nums leading-none", scoreToTextColor(score))}>
           {score.toFixed(1)}
         </p>
-        <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">/10</p>
+        <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">/10</p>
       </div>
     </div>
   );
@@ -83,7 +84,7 @@ function ScoreRing({ score, size = 108 }: { score: number; size?: number }) {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+    <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
       {children}
     </p>
   );
@@ -92,10 +93,10 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function ScoreStat({ value, label, color }: { value: string | number; label: string; color?: string }) {
   return (
     <div className="flex flex-col">
-      <span className={cn("text-lg font-semibold tabular-nums leading-none", color ?? "text-foreground")}>
+      <span className={cn("text-lg font-bold tabular-nums leading-none", color ?? "text-foreground")}>
         {value}
       </span>
-      <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
     </div>
@@ -133,7 +134,7 @@ function QuestionReview({
       >
         <span
           className={cn(
-            "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
+            "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
             isCorrect
               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
               : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
@@ -145,7 +146,7 @@ function QuestionReview({
         <div className="mx-3 min-w-0 flex-1">
           <span
             className={cn(
-              "mb-1 inline-block rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+              "mb-1 inline-block rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide",
               isCorrect
                 ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
                 : "bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400"
@@ -178,7 +179,7 @@ function QuestionReview({
               ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0" />
               : <XCircle className="mt-0.5 size-3.5 shrink-0" />}
             <span>
-              <span className="font-semibold">Your answer: </span>
+              <span className="font-bold">Your answer: </span>
               {userAnswer || "(no answer)"}
             </span>
           </div>
@@ -188,7 +189,7 @@ function QuestionReview({
             <div className="flex items-start gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400">
               <CheckCircle2 className="mt-0.5 size-3.5 shrink-0" />
               <span>
-                <span className="font-semibold">Correct answer: </span>
+                <span className="font-bold">Correct answer: </span>
                 {question.correctAnswer}
               </span>
             </div>
@@ -219,11 +220,11 @@ function QuestionReview({
 function PassagePanel({ title, passage }: { title: string; passage: string }) {
   return (
     <div className="hidden w-[44%] shrink-0 flex-col overflow-y-auto border-r border-border bg-muted/20 lg:flex">
-      <div className="sticky top-0 z-10 border-b border-border bg-background/90 px-5 py-3 backdrop-blur-sm">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <div className="sticky top-0 z-10 border-b border-border bg-background px-5 py-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           Reading Passage
         </p>
-        <p className="mt-1 text-sm font-semibold text-foreground">{title}</p>
+        <p className="mt-1 text-sm font-bold text-foreground">{title}</p>
       </div>
       <div className="flex-1 space-y-4 px-5 py-5">
         {passage.split("\n\n").map((para, i) => (
@@ -256,7 +257,7 @@ export function ReadingAnalysis({ submission }: { submission: ReadingView }) {
     <div className="flex h-screen flex-col overflow-hidden bg-background">
 
       {/* Header */}
-      <header className="flex shrink-0 items-center justify-between border-b border-border bg-background/95 px-5 py-3 backdrop-blur-sm">
+      <header className="flex shrink-0 items-center justify-between border-b border-border bg-background px-5 py-3">
         <Button
           variant="ghost"
           size="sm"
@@ -268,11 +269,11 @@ export function ReadingAnalysis({ submission }: { submission: ReadingView }) {
         </Button>
 
         <div className="flex items-center gap-2 overflow-hidden">
-          <span className="truncate text-sm font-semibold text-foreground">{topic}</span>
+          <span className="truncate text-sm font-bold text-foreground">{topic}</span>
           <span className="text-muted-foreground/40">·</span>
           <span
             className={cn(
-              "shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+              "shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-bold",
               DIFFICULTY_CHIP[difficulty]
             )}
           >
@@ -320,10 +321,10 @@ export function ReadingAnalysis({ submission }: { submission: ReadingView }) {
             <div className="flex items-center gap-5">
               <ScoreRing score={score} />
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                   Reading Score
                 </p>
-                <p className={cn("mt-0.5 text-xl font-semibold", scoreToTextColor(score))}>
+                <p className={cn("mt-0.5 text-xl font-bold", scoreToTextColor(score))}>
                   {scoreToBand(score)}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -386,10 +387,10 @@ export function ReadingAnalysis({ submission }: { submission: ReadingView }) {
               >
                 <div className="flex items-center gap-2.5">
                   <BookOpen className="size-4 text-violet-500 dark:text-violet-400" />
-                  <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+                  <span className="text-sm font-bold text-violet-700 dark:text-violet-300">
                     New Vocabulary
                   </span>
-                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-violet-600 dark:bg-violet-900/40 dark:text-violet-400">
+                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-violet-600 dark:bg-violet-900/40 dark:text-violet-400">
                     {newVocabulary.length} words
                   </span>
                 </div>
@@ -405,11 +406,11 @@ export function ReadingAnalysis({ submission }: { submission: ReadingView }) {
                         key={i}
                         className="flex flex-wrap items-start gap-2 text-sm"
                       >
-                        <span className="rounded-md bg-violet-100 px-2.5 py-0.5 font-semibold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200">
+                        <span className="rounded-md bg-violet-100 px-2.5 py-0.5 font-bold text-violet-800 dark:bg-violet-900/40 dark:text-violet-200">
                           {v.word}
                         </span>
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                          {v.level}
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                          {levelName(v.level)}
                         </span>
                         <span className="text-muted-foreground">{v.meaning}</span>
                       </div>
@@ -430,7 +431,7 @@ export function ReadingAnalysis({ submission }: { submission: ReadingView }) {
                     key={i}
                     className="flex items-start gap-3.5 rounded-xl border border-border bg-card px-4 py-3.5"
                   >
-                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[10px] font-semibold text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[10px] font-bold text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
                       {i + 1}
                     </div>
                     <p className="text-sm leading-6 text-foreground">{item}</p>
@@ -442,7 +443,7 @@ export function ReadingAnalysis({ submission }: { submission: ReadingView }) {
 
           {/* Mobile: passage fallback */}
           <details className="mt-6 lg:hidden">
-            <summary className="cursor-pointer rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground">
+            <summary className="cursor-pointer rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold text-foreground">
               View reading passage
             </summary>
             <div className="mt-2 space-y-3 rounded-xl border border-border bg-muted/30 p-4">

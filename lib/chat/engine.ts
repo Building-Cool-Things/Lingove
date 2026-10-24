@@ -48,7 +48,7 @@ export const needsCheck = (text: string) => text.split(/\s+/).filter((w) => /[a-
 
 export async function checkMessage(text: string, level: string, nativeLanguage: string, topics: Topic[]): Promise<{ mistakes: Mistake[] }> {
   if (!needsCheck(text)) return { mistakes: [] };
-  const raw = await checker.json<Record<string, unknown>>(text, { system: checkSystem(level, nativeLanguage, topics), temperature: 0.1, maxTokens: 800 });
+  const raw = await checker.json<Record<string, unknown>>(text, { system: checkSystem(level, nativeLanguage, topics), temperature: 0.1, maxTokens: 1500 });
   const slugs = new Set(topics.map((t) => t.slug));
   const lower = text.toLowerCase();
 
@@ -65,7 +65,7 @@ export async function checkMessage(text: string, level: string, nativeLanguage: 
     const category: MistakeCategory = topicSlugs.length ? "grammar" : MISTAKE_CATEGORIES.includes(given) && given !== "grammar" ? given : "other";
     mistakes.push({ wrong, right, why, whyNative: str(m.whyNative, 300) || undefined, topicSlugs, category });
   }
-  return { mistakes: mistakes.slice(0, 3) };
+  return { mistakes };
 }
 
 // ── 3. The guide answers a question the learner asked ──

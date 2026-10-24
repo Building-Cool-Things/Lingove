@@ -6,7 +6,7 @@ export default function CorrectionsPage() {
   return (
     <section className="px-5 py-6 sm:px-8 lg:px-10">
       <Badge variant="secondary">Corrections</Badge>
-      <h1 className="mt-3 text-3xl font-semibold tracking-normal sm:text-4xl">Corrections</h1>
+      <h1 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">Corrections</h1>
       <p className="mt-2 text-muted-foreground">
         Review grammar and phrasing corrections from your recent practice. Coming soon.
       </p>

@@ -15,12 +15,12 @@ export function PageShell({
   return (
     <section
       className={cn(
-        "mx-auto flex w-full max-w-[1120px] animate-lgup flex-col gap-5 px-5 py-3 lg:px-12 lg:pb-12 lg:pt-10",
+        "mx-auto flex w-full max-w-[1120px] animate-lgup flex-col gap-5 px-5 py-3 lg:px-8 lg:pb-12 lg:pt-8",
         className,
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-[26px] font-semibold tracking-[-0.01em]">{title}</h1>
+        <h1 className="text-[26px] font-bold tracking-[-.01em]">{title}</h1>
         {action}
       </div>
       {children}
@@ -28,7 +28,7 @@ export function PageShell({
   );
 }
 
-export const sectionTitle = "text-base font-semibold tracking-[-0.015em]";
+export const sectionTitle = "text-base font-bold tracking-[-.01em]";
 
 export const levelChip =
-  "rounded-full bg-secondary px-2 py-0.5 text-[11.5px] font-semibold text-[#14653a] dark:text-[#7fe3a8]";
+  "rounded-full bg-secondary px-2 py-0.5 text-[11.5px] font-bold text-[#52C79A] dark:text-[#52C79A]";
